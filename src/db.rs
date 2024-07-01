@@ -8,34 +8,12 @@ use s::engine::remote::ws::{Client, Ws};
 
 pub type Db = Surreal<s::engine::local::Db>;
 
-async fn setup_users(db: &mut Db) -> s::Result<()> {
-
-
-    //this function will be called from the setup_db function
-    todo!()
-    // Ok(db)
-}
-
-
-async fn setup_tables(db: &mut Db) -> s::Result<()>{
-
-
-    // let _ = query_value(db, surrealql, parameters);
-
-
-    todo!()
-}
-
 pub async fn setup_db() -> s::Result<Db>{
     //Change this into the embedded version when ready for non-data persistence
-    let mut db = Surreal::new::<Mem>(()).await?;
-    
+    let mut db = Surreal::new::<Mem>(()).await?; 
+
     db.use_ns("jeopardy").use_db("main").await?;
-
-    // db.authenticate(jwt).await?;
-
-    // setup_tables(&mut db);
-
+    
     Ok(db)
 }
 

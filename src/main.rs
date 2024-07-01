@@ -1,11 +1,13 @@
 use actix_identity::IdentityMiddleware;
-use actix_web::{cookie::Key, web, App, HttpResponse, HttpServer, Responder};
-use actix_session::SessionMiddleware;
-use actix_session_surrealdb::SurrealSessionStore;
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
 use chrono::Duration;
 mod db;
 use db::setup_db;
+
+mod ends;
+use ends::homepage;
+mod ws;
 
 macro_rules! wapp {
     ($e:expr; $($i:ident),+) => {
@@ -39,10 +41,6 @@ macro_rules! wapp {
 // pub async fn test() -> impl actix_web::Responder{
 //     actix_web::HttpResponse::Ok().body(TEST)
 // }
-#[actix_web::get("/")]
-pub async fn homepage() -> impl Responder{
-    HttpResponse::Ok().body("Hello!")
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -52,11 +50,11 @@ async fn main() -> std::io::Result<()> {
     });
 
     // key needs to be generated outside the closure or else each worker gonna get a diff key
-    let key = Key::generate();
+    // let key = Key::generate();
     HttpServer::new(move|| {
         wapp!(
             App::new()
-            .app_data(web::PayloadConfig::new(20 * 1024 * 1024)) // Set limit to 10MB
+            // .app_data(web::PayloadConfig::new(20 * 1024 * 1024)) // Set limit to 10MB
             .wrap(IdentityMiddleware::builder()
                 .visit_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(30).to_std().unwrap()))
                 .login_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(365).to_std().unwrap()))
@@ -70,8 +68,8 @@ async fn main() -> std::io::Result<()> {
                 actix_web::middleware::ErrorHandlers::new()
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
             )
-            .service(actix_files::Files::new("/usr/bio", "./tmp/bio"))
-            .service(actix_files::Files::new("/usr/pfp", "./tmp/pfp"))
+            // .service(actix_files::Files::new("/usr/bio", "./tmp/bio"))
+            // .service(actix_files::Files::new("/usr/pfp", "./tmp/pfp"))
             // .service(actix_files::Files::new("/tmp/chats", "./tmp/chats").show_files_listing())
             .service(actix_files::Files::new("/src-web/assets", "./src-web/assets"))
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
@@ -107,13 +105,11 @@ pub struct AppData {
     pub db: Arc<Mutex<Db>>,
 }
 #[derive(serde::Serialize)]
-pub struct RainError{
+pub struct EndpointError{
     message: String,
     for_user: bool,
 }
-impl RainError{
-    // const function: fn(Self) = |x|{}; //< so weird
-
+impl EndpointError{
     pub fn from_message(message: impl ToString) -> Self{
         let message = message.to_string();
         // println!("{message}");
@@ -139,3 +135,4 @@ impl RainError{
     //     HttpResponse::BadRequest().body(cmd::sites::ERRHTML)
     // }
 }
+

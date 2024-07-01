@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeopardy Buzzer: Join</title>
+    <link rel="stylesheet" href="bulma.css">
+</head>
+<body>
+    <div class="container has-text-centered mt-6">
+        <p class="title">Jeopardy Buzzer</p>
+        <p class="subtitle">A simple jeopardy buzzer system!</p>
+        <br>
+        <div class="container has-text-centered">
+            <p class="title is-5">Timer: {}</p>
+        </div>
+        <br>
+        <div class="game-container">
+            <button class="title is-3 buzzer has-text-success has-background-link">Buzz!</button>
+        </div>
+        <style>
+            .buzzer {
+                width: calc(200px + 10vw);
+                height: calc(200px + 10vw);
+                border-radius: 50%;
+                background-color: #f0f0f0;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+        </style>          
+        <br>
+        <br>
+        <button class="button is-danger">Leave Room</button>
+    </div>
+</body>
+</html>
