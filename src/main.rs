@@ -44,10 +44,10 @@ macro_rules! wapp {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let db = setup_db().await.expect("Database connection error.");
-    let app_state = web::Data::new(AppData {
-        db: Arc::new(Mutex::new(db.clone())),
-    });
+    // let db = setup_db().await.expect("Database connection error.");
+    // let app_state = web::Data::new(AppData {
+    //     db: Arc::new(Mutex::new(db.clone())),
+    // });
 
     // key needs to be generated outside the closure or else each worker gonna get a diff key
     // let key = Key::generate();
@@ -71,11 +71,11 @@ async fn main() -> std::io::Result<()> {
             // .service(actix_files::Files::new("/usr/bio", "./tmp/bio"))
             // .service(actix_files::Files::new("/usr/pfp", "./tmp/pfp"))
             // .service(actix_files::Files::new("/tmp/chats", "./tmp/chats").show_files_listing())
-            .service(actix_files::Files::new("/src-web/assets", "./src-web/assets"))
+            // .service(actix_files::Files::new("/src-web/assets", "./src-web/assets"))
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
             homepage
         )
-        .app_data(app_state.clone())
+        // .app_data(app_state.clone())
     })
     .bind(("127.0.0.1", 8080))?
     .run()
