@@ -6,6 +6,8 @@ use chrono::Duration;
 mod endpoints;
 use endpoints::*;
 
+mod server;
+
 macro_rules! wapp {
     ($e:expr; $($i:ident),+) => {
         $e
@@ -55,7 +57,8 @@ async fn main() -> std::io::Result<()> {
             )
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
             homepage, join,
-            host, play
+            host, play,
+            ws_host, ws_play
         )
     })
     .bind(("127.0.0.1", 8080))?
