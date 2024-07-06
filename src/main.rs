@@ -2,12 +2,11 @@ use actix_identity::IdentityMiddleware;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
 use chrono::Duration;
-mod db;
-use db::setup_db;
 
-mod ends;
-use ends::homepage;
-mod ws;
+mod endpoints;
+use endpoints::*;
+
+mod server;
 
 macro_rules! wapp {
     ($e:expr; $($i:ident),+) => {
@@ -44,40 +43,26 @@ macro_rules! wapp {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // let db = setup_db().await.expect("Database connection error.");
-    // let app_state = web::Data::new(AppData {
-    //     db: Arc::new(Mutex::new(db.clone())),
-    // });
-
-    // key needs to be generated outside the closure or else each worker gonna get a diff key
-    // let key = Key::generate();
     HttpServer::new(move|| {
         wapp!(
             App::new()
-            // .app_data(web::PayloadConfig::new(20 * 1024 * 1024)) // Set limit to 10MB
             .wrap(IdentityMiddleware::builder()
                 .visit_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(30).to_std().unwrap()))
                 .login_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(365).to_std().unwrap()))
                 .build()
             )
-            // .wrap(SessionMiddleware::builder(
-            //     SurrealSessionStore::from_connection(db.clone(), "sessions"),
-            //     key.clone()
-            // ).build())
             .wrap(
                 actix_web::middleware::ErrorHandlers::new()
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
             )
-            // .service(actix_files::Files::new("/usr/bio", "./tmp/bio"))
-            // .service(actix_files::Files::new("/usr/pfp", "./tmp/pfp"))
-            // .service(actix_files::Files::new("/tmp/chats", "./tmp/chats").show_files_listing())
-            // .service(actix_files::Files::new("/src-web/assets", "./src-web/assets"))
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
-            homepage
+            homepage, join,
+            host, play,
+            ws_host, ws_play
         )
-        // .app_data(app_state.clone())
     })
     .bind(("127.0.0.1", 8080))?
+    // .workers(2)
     .run()
     .await
 }
@@ -88,7 +73,7 @@ fn not_found<B>(res: ServiceResponse<B>) -> actix_web::error::Result<ErrorHandle
     let (req, res) = res.into_parts();
   
     // set body of response to modified body
-    let res = res.set_body("NOUSER"); todo!();
+    let res = res.set_body("<center>Page not found!</center>");
   
     // modified bodies need to be boxed and placed in the "right" slot
     let res = ServiceResponse::new(req, res)
@@ -98,12 +83,13 @@ fn not_found<B>(res: ServiceResponse<B>) -> actix_web::error::Result<ErrorHandle
     Ok(ErrorHandlerResponse::Response(res))
 }
 
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use crate::db::Db;
-pub struct AppData {
-    pub db: Arc<Mutex<Db>>,
-}
+// use std::sync::Arc;
+// use tokio::sync::Mutex;
+// use crate::db::Db;
+// pub struct AppData {
+//     pub db: Arc<Mutex<Db>>,
+// }
+
 #[derive(serde::Serialize)]
 pub struct EndpointError{
     message: String,

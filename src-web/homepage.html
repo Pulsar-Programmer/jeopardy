@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeopardy Buzzer</title>
-    <link rel="stylesheet" href="bulma.css">
+    <link rel="stylesheet" href="/src-web/static/bulma.css">
+    <script src="/src-web/static/error.js"></script>
 </head>
 <body>
     <div class="container has-text-centered mt-6">
         <p class="title">Jeopardy Buzzer</p>
         <p class="subtitle">A simple jeopardy buzzer system!</p>
-        <button class="button is-link">Create Room</button>
-        <button class="button is-info">Join Room</button>
+        <button class="button is-link" onclick="redirect(`/host`)">Create Room</button>
+        <button class="button is-info" onclick="redirect(`/join`)">Join Room</button>
     </div>
 </body>
 </html>
