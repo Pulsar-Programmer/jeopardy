@@ -48,14 +48,14 @@ use actix_web_actors::ws;
 use crate::server::WebsocketConnection;
 
 
-/// WebSocket handshake and start `MyWebSocket` actor. 
+/// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a host that moderates the game.
 #[get("/host")]
 pub async fn ws_host(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     ws::start(WebsocketConnection::host(), &req, stream)
 }
 
-/// WebSocket handshake and start `MyWebSocket` actor. 
+/// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a player that can buzz.
 #[get("/play")]
 pub async fn ws_play(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
@@ -63,8 +63,11 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload) -> Result<HttpRespo
 }
 
 
-
-
+#[get("/new_code")]
+pub async fn new_code() -> Result<HttpResponse, Error>{
+    todo!("check that headers are not from browser (necessary? idk)");
+    todo!("generate a random code and return it to be used in the creation of a new room")
+}
 
 
 // ws://ws_play to join as a player

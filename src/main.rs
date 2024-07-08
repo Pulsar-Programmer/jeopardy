@@ -7,6 +7,7 @@ mod endpoints;
 use endpoints::*;
 
 mod server;
+mod lobby;
 
 macro_rules! wapp {
     ($e:expr; $($i:ident),+) => {
