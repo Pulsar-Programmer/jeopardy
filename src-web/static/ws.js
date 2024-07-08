@@ -1,7 +1,5 @@
 const $status = document.querySelector('#status')
-const $connectButton = document.querySelector('#connect')
 const $form = document.querySelector('#chatform')
-const $input = document.querySelector('#text')
 
 /** @type {WebSocket | null} */
 var socket = null
@@ -48,13 +46,10 @@ function updateConnectionStatus() {
         $status.style.backgroundColor = 'transparent'
         $status.style.color = 'green'
         $status.textContent = `connected`
-        $connectButton.innerHTML = 'Disconnect'
-        $input.focus()
     } else {
         $status.style.backgroundColor = 'red'
         $status.style.color = 'white'
         $status.textContent = 'disconnected'
-        $connectButton.textContent = 'Connect'
     }
 }
 
