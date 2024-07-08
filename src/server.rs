@@ -17,18 +17,18 @@ pub struct WebsocketConnection {
     /// otherwise we drop connection.
     last_hb: Instant,
     is_host: bool, //fix this later
-    room: Addr<Room>,
+    room: Addr<Lobby>,
     room_code: u32,
     client_id: Uuid,
 }
 
 impl WebsocketConnection {
 
-    pub fn host(room: Addr<Room>, room_code: u32) -> Self{
+    pub fn host(room: Addr<Lobby>, room_code: u32) -> Self{
         Self { last_hb: Instant::now(), is_host: true, room_code, room, client_id: Uuid::new_v4()}
     }
 
-    pub fn player(room: Addr<Room>, room_code: u32) -> Self{
+    pub fn player(room: Addr<Lobby>, room_code: u32) -> Self{
         Self { last_hb: Instant::now(), is_host: false, room_code, room, client_id: Uuid::new_v4()}
     }
 
@@ -64,8 +64,9 @@ impl Actor for WebsocketConnection {
         self.room
         .send(Connect {
             addr: our_addr.recipient(),
-            lobby_id: self.room,
-            self_id: self.id,
+            room_code: self.room_code,
+            client_id: self.client_id,
+            is_host: self.is_host,
         })
         .into_actor(self)
         .then(|res, _, ctx| {
@@ -79,7 +80,7 @@ impl Actor for WebsocketConnection {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.room.do_send(Disconnect { id: self.id, room_id: self.room });
+        self.room.do_send(Disconnect { client_id: self.client_id, room_code: self.room_code });
         Running::Stop
     }
 }
@@ -100,12 +101,14 @@ impl StreamHandler<WsInput> for WebsocketConnection {
             Ok(ws::Message::Pong(_)) => {
                 self.last_hb = Instant::now();
             }
-            // Ok(ws::Message::Text(text)) => ctx.text(text),
-            Ok(ws::Message::Text(s)) => self.room.do_send(ClientActorMessage {
-                id: self.client_id,
-                msg: s,
-                room_id: self.room
-            }),
+            Ok(ws::Message::Text(s)) => {
+                let msg = ServerMessage::create(s.to_string());
+                self.room.do_send(LobbyMessage {
+                    client_id: self.client_id,
+                    msg,
+                    room_code: self.room_code,
+                })
+            },
             Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
             Ok(ws::Message::Close(reason)) => {
                 ctx.close(reason);
@@ -121,6 +124,23 @@ impl StreamHandler<WsInput> for WebsocketConnection {
     }
 }
 
+//WsConn responds to this to pipe it through to the actual client
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct WsMessage(pub String);
+
+impl Handler<WsMessage> for WebsocketConnection {
+    type Result = ();
+
+    fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
+        ctx.text(msg.0);
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Nanos(u128);
+//use Duration or Nanos
+
 
 
 
@@ -131,40 +151,52 @@ impl StreamHandler<WsInput> for WebsocketConnection {
 
 
 #[derive(serde::Serialize, serde::Deserialize)]
-struct Time;
-
-#[derive(serde::Serialize, serde::Deserialize)]
-enum ClientMessage{
+pub enum ClientMessage{
     ///Locks the buzzer of the client.
     LockBuzzer,
     ///Sent to a client when they are kicked from the lobby.
     Kicked,
-    TimerStart{
-        start: Time,
+    StartTimer{
+        start: Duration,
+        ///Keeps track of which round the buzzer was started on.
+        round: u32
+    },
+    PauseTimer{
+        at: Duration,
     },
     ///Sent to the host to compare only after the response is checked to match the current round of the lobby.
     BuzzCompleted{
         ///When the buzzer was hit.
-        at: Time,
+        at: Duration,
     }
+
 }
 #[derive(serde::Serialize, serde::Deserialize)]
-enum ServerMessage{
+pub enum ServerMessage{
+    ///This is to lock all the buzzers.
     LockBuzzers,
     ///This is to kick a certain user.
     Kick{
         ///Identifies which user to kick.
         username: String,
     },
-    ///This is sent to the clients to start the time of the buzzer.
-    TimerStart{
-        start: Time,
+    ///This is sent to the clients to start the time of the buzzer. Every time it is sent by the host, make sure to increment the response.
+    StartTimer{ 
+        start: Duration,
+    },
+    PauseTimer{
+        at: Duration,
     },
     ///This is sent to the host when a user buzzes. The host is meant to check against other BuzzCompleted signals for the shortest one.
     BuzzCompleted{
         ///When the buzzer was hit.
-        at: Time,
+        at: Duration,
         ///Which buzzer round it was sent to respond to (prevents time errors carrying into next rounds).
         response: u32,
+    }
+}
+impl ServerMessage{
+    fn create(s: String) -> Self{
+        todo!()
     }
 }
