@@ -11,6 +11,8 @@ struct Client{
     recipient: Recipient<WsMessage>,
     ///Whether the client is a host or not. The types of messages received differ.
     is_host: bool,
+    ///The username of the user.
+    client_name: String,
 }
 
 ///Represents all the rooms and clients and everything in the system. 
@@ -24,7 +26,7 @@ impl Lobby {
     fn send_message(&self, message: ClientMessage, client_id: &Uuid) {
         if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
             let _ = socket_recipient
-                .do_send(WsMessage(serde_json::to_string(&message).unwrap()));
+                .do_send(WsMessage::from_client_msg(&message));
         } else {
             println!("attempting to send message but couldn't find user id.");
         }
@@ -70,9 +72,6 @@ impl Handler<Connect> for Lobby {
             msg.client_id,
             Client { recipient: msg.addr, is_host: msg.is_host },
         );
-
-        // send self your new uuid
-        self.send_message(&format!("your id is {}", msg.client_id), &msg.client_id);
     }
 }
 
@@ -122,9 +121,11 @@ impl Handler<LobbyMessage> for Lobby {
 
     fn handle(&mut self, msg: LobbyMessage, _: &mut Context<Self>) -> Self::Result {
 
+        let Some(our_room) = self.rooms.get(&msg.room_code) else { return };
+
         match msg.msg{
             ServerMessage::LockBuzzers => {
-                self.rooms.get(&msg.room_code).unwrap().iter().for_each(|client| self.send_message(ClientMessage::LockBuzzer, client));
+                our_room.iter().for_each(|client| self.send_message(ClientMessage::LockBuzzer, client));
             },
             ServerMessage::Kick { username } => todo!(),
             ServerMessage::StartTimer { start } => todo!(),

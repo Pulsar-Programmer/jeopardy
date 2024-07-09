@@ -1,6 +1,7 @@
 use std::time::{Duration, Instant};
 use actix::prelude::*;
 use actix_web_actors::ws;
+use serde::de::IntoDeserializer;
 use uuid::Uuid;
 use crate::lobby::*;
 
@@ -20,16 +21,17 @@ pub struct WebsocketConnection {
     room: Addr<Lobby>,
     room_code: u32,
     client_id: Uuid,
+    client_name: String,
 }
 
 impl WebsocketConnection {
 
-    pub fn host(room: Addr<Lobby>, room_code: u32) -> Self{
-        Self { last_hb: Instant::now(), is_host: true, room_code, room, client_id: Uuid::new_v4()}
+    pub fn host(room: Addr<Lobby>, room_code: u32, client_name: String) -> Self{
+        Self { last_hb: Instant::now(), is_host: true, room_code, room, client_id: Uuid::new_v4(), client_name }
     }
 
-    pub fn player(room: Addr<Lobby>, room_code: u32) -> Self{
-        Self { last_hb: Instant::now(), is_host: false, room_code, room, client_id: Uuid::new_v4()}
+    pub fn player(room: Addr<Lobby>, room_code: u32, client_name: String) -> Self{
+        Self { last_hb: Instant::now(), is_host: false, room_code, room, client_id: Uuid::new_v4(), client_name}
     }
 
     /// helper method that sends ping to client every 5 seconds (HEARTBEAT_INTERVAL).
@@ -127,13 +129,26 @@ impl StreamHandler<WsInput> for WebsocketConnection {
 //WsConn responds to this to pipe it through to the actual client
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct WsMessage(pub String);
+pub struct WsMessage{
+    pub text: String,
+    pub for_host: bool,
+}
+impl WsMessage{
+    pub fn from_client_msg(msg: &ClientMessage) -> Self{
+        Self { text: serde_json::to_string(&msg).unwrap_or("SerializationError".into()), for_host: msg.is_for_host() }
+    }
+    pub fn new(text: String, for_host: bool) -> Self{
+        Self { text, for_host }
+    }
+}
 
 impl Handler<WsMessage> for WebsocketConnection {
     type Result = ();
 
     fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
-        ctx.text(msg.0);
+        if self.is_host == msg.for_host{
+            ctx.text(msg.text);
+        }
     }
 }
 
@@ -168,8 +183,25 @@ pub enum ClientMessage{
     BuzzCompleted{
         ///When the buzzer was hit.
         at: Duration,
+    },
+    AddUser{
+        client_id: Uuid,
+    },
+    RemoveUser{
+        client_id: Uuid,
     }
 
+}
+impl ClientMessage{
+    fn is_for_host(&self) -> bool{
+        match self{
+            ClientMessage::LockBuzzer => false,
+            ClientMessage::Kicked => false,
+            ClientMessage::StartTimer { .. } => false,
+            ClientMessage::PauseTimer { .. } => false,
+            ClientMessage::BuzzCompleted { .. } => true,
+        }
+    }
 }
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum ServerMessage{
@@ -178,10 +210,10 @@ pub enum ServerMessage{
     ///This is to kick a certain user.
     Kick{
         ///Identifies which user to kick.
-        username: String,
+        uuid: Uuid, //do we need a username to identify them? I don't think so
     },
     ///This is sent to the clients to start the time of the buzzer. Every time it is sent by the host, make sure to increment the response.
-    StartTimer{ 
+    StartTimer{
         start: Duration,
     },
     PauseTimer{

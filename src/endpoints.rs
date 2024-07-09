@@ -62,6 +62,7 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload) -> Result<HttpRespo
     ws::start(WebsocketConnection::player(), &req, stream)
 }
 
+//js will have to know the UUID of self and others in the lobby. We might have to store both because the other clients need to know the name
 
 #[get("/new_code")]
 pub async fn new_code() -> Result<HttpResponse, Error>{
@@ -72,11 +73,6 @@ pub async fn new_code() -> Result<HttpResponse, Error>{
 
 // ws://ws_play to join as a player
 // ws://ws_host to join as a host
-
-
-
-//make room
-//join room
 
 //buzzer system
 // #[get()]
