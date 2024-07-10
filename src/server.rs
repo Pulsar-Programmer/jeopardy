@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 use actix::prelude::*;
 use actix_web_actors::ws;
-use serde::{de::IntoDeserializer, Deserialize, Serialize};
 use uuid::Uuid;
 use crate::lobby::*;
 
@@ -141,11 +140,6 @@ impl StreamHandler<WsInput> for WebsocketConnection {
 pub struct WsMessage{
     pub text: String,
 }
-impl WsMessage{
-    pub fn new(text: String) -> Self{
-        Self { text }
-    }
-}
 
 impl Handler<WsMessage> for WebsocketConnection {
     type Result = ();
@@ -194,6 +188,8 @@ pub enum ClientMessage{
     RemoveUser{
         client_id: Uuid,
     },
+    ///A message for when the code is not found in a room.
+    CodeNotFound,
 }
 // impl ClientMessage{
 //     fn is_for_host(&self) -> bool{

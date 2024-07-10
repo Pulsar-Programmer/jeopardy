@@ -31,7 +31,7 @@ impl Lobby {
     fn send_message(&self, message: &ClientMessage, client_id: &Uuid) {
         if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
             let _ = socket_recipient
-                .do_send(todo!());
+                .do_send(WsMessage { text: serde_json::to_string(message).unwrap() });
         } else {
             println!("attempting to send message but couldn't find user id.");
         }
@@ -83,10 +83,15 @@ impl Handler<Connect> for Lobby {
     type Result = ();
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
-        // create a room if necessary, and then add the id to it
-        self.rooms
-            .entry(msg.room_code)
-            .or_insert_with(HashSet::new).insert(msg.client_id);
+
+        //only hosts can create a room
+        if msg.is_host{
+            self.rooms
+                .entry(msg.room_code)
+                .or_default().insert(msg.client_id);
+        } else {
+            msg.addr.do_send(WsMessage { text: serde_json::to_string(&ClientMessage::CodeNotFound).unwrap() })
+        }
 
         self.broadcast(ClientMessage::AddUser{ client_name: msg.client_name.clone(), client_id: msg.client_id }, msg.room_code);
 
@@ -148,11 +153,7 @@ impl Handler<LobbyMessage> for Lobby {
                 self.broadcast_players(ClientMessage::LockBuzzer, msg.room_code);
             },
             ServerMessage::Kick { uuid } => {
-                
-                todo!()
-                // if our_room.contains(&uuid){
-                //     self.send_message(ClientMessage::Kicked, &uuid)
-                // }
+                self.send_message(&ClientMessage::Kicked, &uuid);
             },
             ServerMessage::StartTimer { start } => {
                 self.broadcast_players(ClientMessage::StartTimer { start, round: todo!() }, msg.room_code)
