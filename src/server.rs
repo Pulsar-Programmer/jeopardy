@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 use actix::prelude::*;
 use actix_web_actors::ws;
-use serde::de::IntoDeserializer;
+use serde::{de::IntoDeserializer, Deserialize, Serialize};
 use uuid::Uuid;
 use crate::lobby::*;
 
@@ -18,20 +18,20 @@ pub struct WebsocketConnection {
     /// otherwise we drop connection.
     last_hb: Instant,
     is_host: bool, //fix this later
-    room: Addr<Lobby>,
+    lobby: Addr<Lobby>,
     room_code: u32,
     client_id: Uuid,
-    client_name: String,
+    client_name: String, //replace with Arc<str>
 }
 
 impl WebsocketConnection {
 
-    pub fn host(room: Addr<Lobby>, room_code: u32, client_name: String) -> Self{
-        Self { last_hb: Instant::now(), is_host: true, room_code, room, client_id: Uuid::new_v4(), client_name }
+    pub fn host(lobby: Addr<Lobby>, room_code: u32, client_name: String, client_id: Uuid) -> Self{
+        Self { last_hb: Instant::now(), is_host: true, room_code, lobby, client_id, client_name }
     }
 
-    pub fn player(room: Addr<Lobby>, room_code: u32, client_name: String) -> Self{
-        Self { last_hb: Instant::now(), is_host: false, room_code, room, client_id: Uuid::new_v4(), client_name}
+    pub fn player(lobby: Addr<Lobby>, room_code: u32, client_name: String, client_id: Uuid) -> Self{
+        Self { last_hb: Instant::now(), is_host: false, room_code, lobby, client_id, client_name}
     }
 
     /// helper method that sends ping to client every 5 seconds (HEARTBEAT_INTERVAL).
@@ -63,12 +63,13 @@ impl Actor for WebsocketConnection {
     fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
         let our_addr = ctx.address();
-        self.room
+        self.lobby
         .send(Connect {
             addr: our_addr.recipient(),
             room_code: self.room_code,
             client_id: self.client_id,
             is_host: self.is_host,
+            client_name: self.client_name.clone(),
         })
         .into_actor(self)
         .then(|res, _, ctx| {
@@ -82,7 +83,7 @@ impl Actor for WebsocketConnection {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.room.do_send(Disconnect { client_id: self.client_id, room_code: self.room_code });
+        self.lobby.do_send(Disconnect { client_id: self.client_id, room_code: self.room_code });
         Running::Stop
     }
 }
@@ -104,8 +105,16 @@ impl StreamHandler<WsInput> for WebsocketConnection {
                 self.last_hb = Instant::now();
             }
             Ok(ws::Message::Text(s)) => {
-                let msg = ServerMessage::create(s.to_string());
-                self.room.do_send(LobbyMessage {
+                let msg = match ServerMessage::create(s.to_string()) {
+                    Ok(msg) => msg,
+                    Err(e) => {
+                        println!("Error {e}");
+                        println!("The message intended for the Server could not be received.");
+                        return;
+                    },
+                };
+
+                self.lobby.do_send(LobbyMessage {
                     client_id: self.client_id,
                     msg,
                     room_code: self.room_code,
@@ -131,14 +140,10 @@ impl StreamHandler<WsInput> for WebsocketConnection {
 #[rtype(result = "()")]
 pub struct WsMessage{
     pub text: String,
-    pub for_host: bool,
 }
 impl WsMessage{
-    pub fn from_client_msg(msg: &ClientMessage) -> Self{
-        Self { text: serde_json::to_string(&msg).unwrap_or("SerializationError".into()), for_host: msg.is_for_host() }
-    }
-    pub fn new(text: String, for_host: bool) -> Self{
-        Self { text, for_host }
+    pub fn new(text: String) -> Self{
+        Self { text }
     }
 }
 
@@ -146,9 +151,7 @@ impl Handler<WsMessage> for WebsocketConnection {
     type Result = ();
 
     fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
-        if self.is_host == msg.for_host{
-            ctx.text(msg.text);
-        }
+        ctx.text(msg.text)
     }
 }
 
@@ -185,24 +188,24 @@ pub enum ClientMessage{
         at: Duration,
     },
     AddUser{
+        client_name: String,
         client_id: Uuid,
     },
     RemoveUser{
         client_id: Uuid,
-    }
-
+    },
 }
-impl ClientMessage{
-    fn is_for_host(&self) -> bool{
-        match self{
-            ClientMessage::LockBuzzer => false,
-            ClientMessage::Kicked => false,
-            ClientMessage::StartTimer { .. } => false,
-            ClientMessage::PauseTimer { .. } => false,
-            ClientMessage::BuzzCompleted { .. } => true,
-        }
-    }
-}
+// impl ClientMessage{
+//     fn is_for_host(&self) -> bool{
+//         match self{
+//             ClientMessage::LockBuzzer => false,
+//             ClientMessage::Kicked => false,
+//             ClientMessage::StartTimer { .. } => false,
+//             ClientMessage::PauseTimer { .. } => false,
+//             ClientMessage::BuzzCompleted { .. } => true,
+//         }
+//     }
+// }
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum ServerMessage{
     ///This is to lock all the buzzers.
@@ -228,7 +231,7 @@ pub enum ServerMessage{
     }
 }
 impl ServerMessage{
-    fn create(s: String) -> Self{
-        todo!()
+    fn create(s: String) -> Result<Self, serde_json::Error>{
+        serde_json::from_str(&s)
     }
 }

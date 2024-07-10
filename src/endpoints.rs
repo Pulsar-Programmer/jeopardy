@@ -43,23 +43,36 @@ pub async fn host() -> impl Responder{
 
 
 
-use actix_web::{get, web, Error, HttpRequest, HttpResponse, Responder};
+use actix::Addr;
+use actix_web::{get, web::{self, Data}, Error, HttpRequest, HttpResponse, Responder};
 use actix_web_actors::ws;
-use crate::server::WebsocketConnection;
+use rand::Rng;
+use uuid::Uuid;
+use crate::{lobby::Lobby, server::WebsocketConnection};
 
+#[derive(serde::Serialize, serde::Deserialize)]
+struct UserData{
+    client_uuid: Uuid,
+    client_name: String,
+    room_code: u32,
+}
 
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a host that moderates the game.
 #[get("/host")]
-pub async fn ws_host(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    ws::start(WebsocketConnection::host(), &req, stream)
+pub async fn ws_host(req: HttpRequest, stream: web::Payload, user_data: web::Json<UserData>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
+    let user_data = user_data.into_inner();
+    let srv = srv.get_ref().clone();
+    ws::start(WebsocketConnection::host(srv, user_data.room_code, user_data.client_name, user_data.client_uuid), &req, stream)
 }
 
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a player that can buzz.
 #[get("/play")]
-pub async fn ws_play(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    ws::start(WebsocketConnection::player(), &req, stream)
+pub async fn ws_play(req: HttpRequest, stream: web::Payload, user_data: web::Json<UserData>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
+    let user_data = user_data.into_inner();
+    let srv = srv.get_ref().clone();
+    ws::start(WebsocketConnection::player(srv, user_data.room_code, user_data.client_name, user_data.client_uuid), &req, stream)
 }
 
 //js will have to know the UUID of self and others in the lobby. We might have to store both because the other clients need to know the name
@@ -67,9 +80,15 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload) -> Result<HttpRespo
 #[get("/new_code")]
 pub async fn new_code() -> Result<HttpResponse, Error>{
     todo!("check that headers are not from browser (necessary? idk)");
+    let code = rand::thread_rng().gen_range(100_000..1_000_000) as u32;
     todo!("generate a random code and return it to be used in the creation of a new room")
 }
 
+#[get("/new_uuid")]
+pub async fn new_uuid() -> Result<HttpResponse, Error>{
+    let uuid = uuid::Uuid::new_v4();
+    todo!("generate a new UUID and allow the frontend to use it for their thing")
+}
 
 // ws://ws_play to join as a player
 // ws://ws_host to join as a host
