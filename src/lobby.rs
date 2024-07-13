@@ -11,8 +11,8 @@ struct Client{
     recipient: Recipient<WsMessage>,
     ///Whether the client is a host or not. The types of messages received differ.
     is_host: bool,
-    ///The username of the user.
-    client_name: String,
+    // ///The username of the user.
+    // client_name: String,
 }
 
 struct Room {
@@ -93,12 +93,12 @@ impl Handler<Connect> for Lobby {
             msg.addr.do_send(WsMessage { text: serde_json::to_string(&ClientMessage::CodeNotFound).unwrap() })
         }
 
-        self.broadcast(ClientMessage::AddUser{ client_name: msg.client_name.clone(), client_id: msg.client_id }, msg.room_code);
+        self.broadcast(ClientMessage::AddUser{ client_name: msg.client_name, client_id: msg.client_id }, msg.room_code);
 
         // store the address
         self.sessions.insert(
             msg.client_id,
-            Client { recipient: msg.addr, is_host: msg.is_host, client_name: msg.client_name },
+            Client { recipient: msg.addr, is_host: msg.is_host },
         );
     }
 }

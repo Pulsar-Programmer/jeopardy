@@ -59,7 +59,8 @@ async fn main() -> std::io::Result<()> {
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
             homepage, join,
             host, play,
-            ws_host, ws_play
+            ws_host, ws_play,
+            new_code, new_uuid
         )
     })
     .bind(("127.0.0.1", 8080))?

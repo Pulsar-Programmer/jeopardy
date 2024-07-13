@@ -1,33 +1,31 @@
-const $status = document.querySelector('#status')
-const $form = document.querySelector('#chatform')
-
 /** @type {WebSocket | null} */
-var socket = null
+var socket = null;
 
-function connect() {
+function connect(is_host) {
     disconnect()
 
     const { location } = window
 
-    const proto = location.protocol.startsWith('https') ? 'wss' : 'ws'
-    const wsUri = `${proto}://${location.host}/ws`
+    const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws'
+    const wsUri = `${protocol}://${location.host}/${is_host ? "host" : "play"}`
 
     console.log('Connecting...')
     socket = new WebSocket(wsUri)
 
     socket.onopen = () => {
         console.log('Connected')
-        updateConnectionStatus()
     }
 
+    let handle_message = is_host ? handle_message_host : handle_message_player;
+
     socket.onmessage = (ev) => {
-        console.log('Received: ' + ev.data, 'message')
+        console.log('Received: ' + ev.data)
+        handle_message(ev.data);
     }
 
     socket.onclose = () => {
         console.log('Disconnected')
         socket = null
-        updateConnectionStatus()
     }
 }
 
@@ -36,43 +34,18 @@ function disconnect() {
         console.log('Disconnecting...')
         socket.close()
         socket = null
-
-        updateConnectionStatus()
     }
 }
 
-function updateConnectionStatus() {
-    if (socket) {
-        $status.style.backgroundColor = 'transparent'
-        $status.style.color = 'green'
-        $status.textContent = `connected`
-    } else {
-        $status.style.backgroundColor = 'red'
-        $status.style.color = 'white'
-        $status.textContent = 'disconnected'
-    }
+function handle_message_host(text){
+    let object = JSON.parse(text);
 }
 
-$connectButton.addEventListener('click', () => {
-    if (socket) {
-        disconnect()
-    } else {
-        connect()
-    }
+function handle_message_player(text){
+    let object = JSON.parse(text);
+}
 
-    updateConnectionStatus()
-})
 
-$form.addEventListener('submit', (ev) => {
-    ev.preventDefault()
-
-    const text = $input.value
-
-    console.log('Sending: ' + text)
-    socket.send(text)
-
-    $input.value = ''
-    $input.focus()
-})
-
-updateConnectionStatus()
+function text_socket(text){
+    socket.send(text);
+}

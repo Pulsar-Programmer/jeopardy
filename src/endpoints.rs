@@ -78,16 +78,15 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload, user_data: web::Jso
 //js will have to know the UUID of self and others in the lobby. We might have to store both because the other clients need to know the name
 
 #[get("/new_code")]
-pub async fn new_code() -> Result<HttpResponse, Error>{
-    todo!("check that headers are not from browser (necessary? idk)");
+pub async fn new_code() -> HttpResponse{
     let code = rand::thread_rng().gen_range(100_000..1_000_000) as u32;
-    todo!("generate a random code and return it to be used in the creation of a new room")
+    HttpResponse::Ok().json(code)
 }
 
 #[get("/new_uuid")]
-pub async fn new_uuid() -> Result<HttpResponse, Error>{
+pub async fn new_uuid() -> HttpResponse{
     let uuid = uuid::Uuid::new_v4();
-    todo!("generate a new UUID and allow the frontend to use it for their thing")
+    HttpResponse::Ok().json(uuid)
 }
 
 // ws://ws_play to join as a player
