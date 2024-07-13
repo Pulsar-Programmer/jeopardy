@@ -40,6 +40,60 @@ function host(){
         room_code: code,
     }
 
-    //join with data
-    
+    connect(true, data);
+}
+
+var users = [];
+
+function add_user(name, id){
+    users.push({id: id, name: name});
+    //add user on frontend 
+}
+
+function remove_user(id){
+    users = users.filter((data)=>{
+        return data.id !== id;
+    });
+    //remove user on frontend
+}
+
+
+
+function kick_user(id){
+    data = {
+        Kick : {
+            uuid: id,
+        }
+    }
+    text_socket(JSON.stringify(data))
+}
+
+function lock_buzzers(){
+    text_socket("LockBuzzers")
+}
+
+function clear_buzzers(){
+    text_socket("ClearBuzzers")
+}
+
+function start_timers(secs){
+    start_timer();
+    let nanos = 1_000_000_000 * secs; 
+    data = {
+        StartTimer: {
+            start: nanos,
+        }
+    }
+    text_socket(JSON.stringify(data))
+}
+
+function pause_timers(secs){
+    pause_timer();
+    let nanos = 1_000_000_000 * secs; 
+    data = {
+        PauseTimer : {
+            at: nanos,
+        }
+    }
+    text_socket(JSON.stringify(data))
 }

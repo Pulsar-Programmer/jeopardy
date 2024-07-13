@@ -11,7 +11,6 @@ function play(){
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data), 
     })
     .then(handle)
     .then(new_uuid => {
@@ -26,5 +25,22 @@ function play(){
         room_code: code,
     }
 
-    //join with data
+    connect(false, data);
+}
+
+function buzz(){
+    
+}
+
+
+function enable_buzzer(){
+    
+}
+
+function disable_buzzer(){
+
+}
+
+function clear_buzzer(){
+
 }

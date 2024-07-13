@@ -15,9 +15,22 @@ struct Client{
     // client_name: String,
 }
 
+#[derive(Default)]
 struct Room {
     clients: HashSet<Uuid>, //perhaps store clients as a HashMap<Uuid, Client> here and eliminate sessions?
     round: u32,
+}
+impl std::ops::Deref for Room{
+    type Target = HashSet<Uuid>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.clients
+    }
+}
+impl std::ops::DerefMut for Room{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.clients
+    }
 }
 
 ///Represents all the rooms and clients and everything in the system. 
@@ -25,7 +38,7 @@ pub struct Lobby {
     ///Represents all the clients, connecting their UUID and their ability to receive messages. Given a UUID, a client ID is returned. 
     sessions: HashMap<Uuid, Client>,
     ///Represents the rooms, retrievable via the code, giving access to all the clients' ids in the room.
-    rooms: HashMap<u32, HashSet<Uuid>>,
+    rooms: HashMap<u32, Room>,
 }
 impl Lobby {
     fn send_message(&self, message: &ClientMessage, client_id: &Uuid) {
@@ -93,6 +106,8 @@ impl Handler<Connect> for Lobby {
             msg.addr.do_send(WsMessage { text: serde_json::to_string(&ClientMessage::CodeNotFound).unwrap() })
         }
 
+        //todo!("If there are other hosts in the room, kick this one.")
+
         self.broadcast(ClientMessage::AddUser{ client_name: msg.client_name, client_id: msg.client_id }, msg.room_code);
 
         // store the address
@@ -153,17 +168,27 @@ impl Handler<LobbyMessage> for Lobby {
                 self.broadcast_players(ClientMessage::LockBuzzer, msg.room_code);
             },
             ServerMessage::Kick { uuid } => {
+                let Some(client) = self.sessions.get(&msg.client_id) else { return };
+                if !client.is_host{
+                    return;
+                }
                 self.send_message(&ClientMessage::Kicked, &uuid);
             },
             ServerMessage::StartTimer { start } => {
-                self.broadcast_players(ClientMessage::StartTimer { start, round: todo!() }, msg.room_code)
+                let Some(room) = self.rooms.get_mut(&msg.room_code) else { return };
+                room.round += 1;
+                let round = room.round;
+                self.broadcast_players(ClientMessage::StartTimer { start, round }, msg.room_code)
             },
             ServerMessage::PauseTimer { at } => {
                 self.broadcast_players(ClientMessage::PauseTimer { at }, msg.room_code)
             },
             ServerMessage::BuzzCompleted { at, response } => {
-                // if response != self.rooms.get(&msg.room_code).round { return };
-                todo!("check that response matches the round we are on");
+                let Some(room) = self.rooms.get(&msg.room_code) else { return };
+                if response != room.round {
+                    println!("Rounds did not match!"); 
+                    return 
+                };
                 self.broadcast_host(ClientMessage::BuzzCompleted { at }, msg.room_code)
             },
         }        

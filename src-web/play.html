@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeopardy Buzzer: Play</title>
     <link rel="stylesheet" href="/src-web/static/bulma.css">
+    <script src="/src-web/static/play.js"></script>
+    <script src="/src-web/static/ws.js"></script>
+    <script src="/src-web/static/error.js"></script>
 </head>
 <body>
     <div class="container has-text-centered mt-6">
@@ -16,7 +19,7 @@
         </div>
         <br>
         <div class="game-container">
-            <button class="title is-3 buzzer has-text-success has-background-link">Buzz!</button>
+            <button onclick="buzz()" class="title is-3 buzzer has-text-success has-background-link">Buzz!</button>
         </div>
         <style>
             .buzzer {
