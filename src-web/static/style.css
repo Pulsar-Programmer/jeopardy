@@ -1,0 +1,16 @@
+.player:hover{
+    color: red,
+}
+.buzzer {
+    width: calc(200px + 10vw);
+    height: calc(200px + 10vw);
+    border-radius: 50%;
+    background-color: #0080ff;
+    color:rgb(0, 0, 0);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.buzzer:disabled{
+    background-color: #6e89a8;
+    color: rgb(0, 0, 0);
+}

@@ -1,7 +1,5 @@
 
-document.addEventListener('DOMContentLoaded', (_event) => {
-    host();
-});
+document.addEventListener('DOMContentLoaded', host);
 
 
 function host(){
@@ -41,23 +39,17 @@ function host(){
     }
 
     connect(true, data);
+
+    document.getElementById("gamecode").innerHTML = `Game Code: ${code}`;
 }
 
-var users = [];
-
 function add_user(name, id){
-    users.push({id: id, name: name});
-    //add user on frontend 
+    document.getElementById("players").innerHTML += `<p onclick="kick_user('${id}')" class="subtitle player" id="${id}">${name}</p>`;
 }
 
 function remove_user(id){
-    users = users.filter((data)=>{
-        return data.id !== id;
-    });
-    //remove user on frontend
+    document.getElementById(`${id}`).remove();
 }
-
-
 
 function kick_user(id){
     data = {
@@ -88,7 +80,7 @@ function start_timers(secs){
 }
 
 function pause_timers(secs){
-    pause_timer();
+    resume_timer();
     let nanos = 1_000_000_000 * secs; 
     data = {
         PauseTimer : {

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jeopardy Buzzer: Host</title>
     <link rel="stylesheet" href="/src-web/static/bulma.css">
+    <link rel="stylesheet" href="/src-web/static/style.css">
     <script src="/src-web/static/host.js"></script>
     <script src="/src-web/static/ws.js"></script>
     <script src="/src-web/static/error.js"></script>
@@ -14,9 +15,9 @@
         <p class="title">Jeopardy Buzzer</p>
         <p class="subtitle">A simple jeopardy buzzer system!</p>
         <br>
-        <p class="title is-5">Game Code: {}</p>
+        <p class="title is-5" id="gamecode">Game Code: {}</p>
         <div class="container has-text-centered">
-            <p class="title is-5">Timer: {}</p>
+            <p class="title is-5" id="timer">Timer: {}</p>
             <button class="button is-info">Start</button>
             <button class="button is-warning">Pause</button>
             <button class="button is-link">Reset</button>
@@ -25,9 +26,8 @@
         <button class="button is-warning">Clear Buzzers</button>
         <br>
         <br>
-        <div class="notification is-primary is-flex is-flex-direction-column">
+        <div class="notification is-primary is-flex is-flex-direction-column" id="players">
             <p class="title is-4">Players:</p>
-            <p class="subtitle">Player 1</p>
         </div>
         <br>
         <button class="button is-danger">End Game</button>

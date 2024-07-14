@@ -206,6 +206,8 @@ pub enum ClientMessage{
 pub enum ServerMessage{
     ///This is to lock all the buzzers.
     LockBuzzers,
+    // ///This is to enable all the buzzers back again.
+    // ClearBuzzers,
     ///This is to kick a certain user.
     Kick{
         ///Identifies which user to kick.

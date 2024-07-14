@@ -60,15 +60,14 @@ function handle_message_host(text){
 function handle_message_player(text){
     let object = JSON.parse(text);
     if(object.LockBuzzer){
-        
+        disable_buzzer();
     } else if(object.Kicked){
         alert("Kicked from the lobby!");
         disconnect();
     } else if(object.StartTimer){
         round = object.StartTimer.round;
-
     } else if(object.PauseTimer){
-
+        pause_timer();
     } else if(object.CodeNotFound){
         alert("Code not found!");
         disconnect();
@@ -83,10 +82,48 @@ function text_socket(text){
     socket.send(text);
 }
 
-function start_timer(){
 
+var seconds = 0;
+var timer_enabled = false;
+var timer;
+
+function start_timer(secs) {
+    seconds = secs;
+    timer_enabled = true;
+    timer = setInterval(function() {
+        if (!timer_enabled) {
+            clearInterval(timer);
+            return;
+        }
+
+        seconds += 0.01; // Increment seconds
+        seconds = Math.floor(seconds * 100) / 100; // Round to two decimal places
+
+        document.getElementById("demo").innerHTML = seconds + "s ";
+
+        // If the count down is over, write some text 
+        if (seconds >= 60) { // Assuming you want to count up to 60 seconds
+            clearInterval(timer);
+            return;
+        }
+    }, 10);
 }
 
 function pause_timer(){
-
+    timer_enabled = false;
 }
+
+function resume_timer(){
+    timer_enabled = true;
+}
+
+
+function stop_timer() {
+    timer_enabled = false;
+    clearInterval(timer);
+}
+
+// document.getElementById("start_timer").addEventListener("click", start_timer);
+// document.getElementById("pause_timer").addEventListener("click", pause_timer);
+// document.getElementById("stop_timer").addEventListener("click", stop_timer);
+
