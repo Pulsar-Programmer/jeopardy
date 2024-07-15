@@ -34,6 +34,7 @@ impl std::ops::DerefMut for Room{
 }
 
 ///Represents all the rooms and clients and everything in the system. 
+#[derive(Default)]
 pub struct Lobby {
     ///Represents all the clients, connecting their UUID and their ability to receive messages. Given a UUID, a client ID is returned. 
     sessions: HashMap<Uuid, Client>,

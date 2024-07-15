@@ -1,3 +1,4 @@
+use actix::Actor;
 use actix_identity::IdentityMiddleware;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
@@ -44,6 +45,8 @@ macro_rules! wapp {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let server: lobby::Lobby = Default::default();
+    let server = server.start();
     HttpServer::new(move|| {
         wapp!(
             App::new()
@@ -56,11 +59,13 @@ async fn main() -> std::io::Result<()> {
                 actix_web::middleware::ErrorHandlers::new()
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
             )
+            .app_data(web::Data::new(server.clone()))
             .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
+            
             homepage, join,
             host, play,
-            ws_host, ws_play,
-            new_code, new_uuid
+            new_code, new_uuid,
+            ws_host, ws_play
         )
     })
     .bind(("127.0.0.1", 8080))?

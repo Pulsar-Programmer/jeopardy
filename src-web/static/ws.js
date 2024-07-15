@@ -3,21 +3,24 @@ var socket = null;
 
 var round = 0;
 
-function connect(is_host, userData) {
+function connect(is_host, room_code, uuid, name) {
     disconnect()
 
     const { location } = window
 
     const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws'
-    const wsUri = `${protocol}://${location.host}/${is_host ? "host" : "play"}`
+    const wsUri = `${protocol}://${location.host}/ws_${is_host ? "host" : "play"}`
+    
+    const wsUriData = `${wsUri}/${room_code}${uuid}${name}`;
 
     console.log('Connecting...')
-    socket = new WebSocket(wsUri)
+    socket = new WebSocket(wsUriData)
 
     socket.onopen = () => {
+        
         console.log('Connected');
-        socket.send(JSON.stringify(userData));
-        console.log(`Sent data: ${userData}`);
+        // socket.send(JSON.stringify(userData));
+        // console.log(`Sent data: ${userData}`);
     }
 
     const handle_message = is_host ? handle_message_host : handle_message_player;
@@ -99,7 +102,7 @@ function start_timer(secs) {
         seconds += 0.01; // Increment seconds
         seconds = Math.floor(seconds * 100) / 100; // Round to two decimal places
 
-        document.getElementById("demo").innerHTML = seconds + "s ";
+        document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
 
         // If the count down is over, write some text 
         if (seconds >= 60) { // Assuming you want to count up to 60 seconds

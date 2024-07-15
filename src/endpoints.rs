@@ -43,36 +43,41 @@ pub async fn host() -> impl Responder{
 
 
 
+use std::rc::Rc;
+
 use actix::Addr;
-use actix_web::{get, web::{self, Data}, Error, HttpRequest, HttpResponse, Responder};
+use actix_web::{get, web::{self, Data, Path}, Error, HttpRequest, HttpResponse, Responder};
 use actix_web_actors::ws;
 use rand::Rng;
 use uuid::Uuid;
 use crate::{lobby::Lobby, server::WebsocketConnection};
 
-#[derive(serde::Serialize, serde::Deserialize)]
-struct UserData{
-    client_uuid: Uuid,
-    client_name: String,
-    room_code: u32,
-}
-
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a host that moderates the game.
-#[get("/host")]
-pub async fn ws_host(req: HttpRequest, stream: web::Payload, user_data: web::Json<UserData>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
-    let user_data = user_data.into_inner();
+#[get("/ws_host/{dat}")]
+pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobby>>, dat: Path<String>) -> Result<HttpResponse, Error> {
+    let room_code = &dat[0..6];
+    let uuid = &dat[6..42];
+    let name = &dat[42..];
+    let room_code = room_code.parse().expect("Error: Room code is invalid!");
+    let name = name.to_string();
+    let uuid = uuid.parse().expect("Error: UUID is invalid!");
     let srv = srv.get_ref().clone();
-    ws::start(WebsocketConnection::host(srv, user_data.room_code, user_data.client_name, user_data.client_uuid), &req, stream)
+    ws::start(WebsocketConnection::host(srv, room_code, name, uuid), &req, stream)
 }
 
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a player that can buzz.
-#[get("/play")]
-pub async fn ws_play(req: HttpRequest, stream: web::Payload, user_data: web::Json<UserData>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
-    let user_data = user_data.into_inner();
+#[get("/ws_host/{dat}")]
+pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
+    let room_code = &dat[0..6];
+    let uuid = &dat[6..42];
+    let name = &dat[42..];
+    let room_code = room_code.parse().expect("Error: Room code is invalid!");
+    let name = name.to_string();
+    let uuid = uuid.parse().expect("Error: UUID is invalid!");
     let srv = srv.get_ref().clone();
-    ws::start(WebsocketConnection::player(srv, user_data.room_code, user_data.client_name, user_data.client_uuid), &req, stream)
+    ws::start(WebsocketConnection::player(srv, room_code, name, uuid), &req, stream)
 }
 
 //js will have to know the UUID of self and others in the lobby. We might have to store both because the other clients need to know the name

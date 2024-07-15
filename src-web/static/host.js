@@ -2,13 +2,13 @@
 document.addEventListener('DOMContentLoaded', host);
 
 
-function host(){
+async function host(){
 
     let name = "Host";
     let uuid;
     let code;
     
-    fetch("/new_uuid", {
+    await fetch("/new_uuid", {
         method: 'GET', 
         headers: {
             'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ function host(){
     })
     .catch(notify);
 
-    fetch("/new_code", {
+    await fetch("/new_code", {
         method: 'GET', 
         headers: {
             'Content-Type': 'application/json',
@@ -28,17 +28,12 @@ function host(){
     })
     .then(handle)
     .then(new_code => {
+        console.log(new_code);
         code = new_code;
     })
     .catch(notify);
 
-    let data = {
-        client_uuid: uuid,
-        client_name: name,
-        room_code: code,
-    }
-
-    connect(true, data);
+    connect(true, code, uuid, name);
 
     document.getElementById("gamecode").innerHTML = `Game Code: ${code}`;
 }

@@ -2,12 +2,12 @@ const urlParams = new URLSearchParams(window.location.search);
 
 document.addEventListener('DOMContentLoaded', play);
 
-function play(){
+async function play(){
     let name = urlParams.get('name');
     let code = urlParams.get('code');
     let uuid;
     
-    fetch("/new_uuid", {
+    await fetch("/new_uuid", {
         method: 'GET', 
         headers: {
             'Content-Type': 'application/json',
@@ -19,14 +19,7 @@ function play(){
     })
     .catch(notify);
 
-
-    let data = {
-        client_uuid: uuid,
-        client_name: name,
-        room_code: code,
-    }
-
-    connect(false, data);
+    connect(false, code, uuid, name);
 }
 
 function buzz(){
