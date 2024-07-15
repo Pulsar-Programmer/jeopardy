@@ -9,9 +9,6 @@ async function play(){
     
     await fetch("/new_uuid", {
         method: 'GET', 
-        headers: {
-            'Content-Type': 'application/json',
-        },
     })
     .then(handle)
     .then(new_uuid => {

@@ -9,10 +9,7 @@ async function host(){
     let code;
     
     await fetch("/new_uuid", {
-        method: 'GET', 
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        method: 'GET',
     })
     .then(handle)
     .then(new_uuid => {
@@ -22,9 +19,6 @@ async function host(){
 
     await fetch("/new_code", {
         method: 'GET', 
-        headers: {
-            'Content-Type': 'application/json',
-        },
     })
     .then(handle)
     .then(new_code => {

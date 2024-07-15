@@ -1,3 +1,10 @@
+use actix::Addr;
+use actix_web::{get, http::header::ContentType, web::{self, Data, Path}, Error, HttpRequest, HttpResponse, Responder, ResponseError};
+use actix_web_actors::ws;
+use rand::Rng;
+use uuid::Uuid;
+use crate::{lobby::Lobby, server::WebsocketConnection};
+
 
 #[macro_export]
 macro_rules! website {
@@ -41,16 +48,27 @@ pub async fn host() -> impl Responder{
     HttpResponse::Ok().body(HOST)
 }
 
+///This is an error that can occur during the parsing of the room code and uuid.
+#[derive(Debug)]
+struct ParseError{
+    error: String,
+}
+impl std::fmt::Display for ParseError{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.error)
+    }
+}
+impl ResponseError for ParseError{
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        actix_web::http::StatusCode::BAD_REQUEST
+    }
 
-
-use std::rc::Rc;
-
-use actix::Addr;
-use actix_web::{get, web::{self, Data, Path}, Error, HttpRequest, HttpResponse, Responder};
-use actix_web_actors::ws;
-use rand::Rng;
-use uuid::Uuid;
-use crate::{lobby::Lobby, server::WebsocketConnection};
+    fn error_response(&self) -> HttpResponse<actix_web::body::BoxBody> {
+        HttpResponse::build(self.status_code())
+            .insert_header(ContentType::plaintext())
+            .body(self.to_string())
+    }
+}
 
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a host that moderates the game.
@@ -59,9 +77,15 @@ pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobb
     let room_code = &dat[0..6];
     let uuid = &dat[6..42];
     let name = &dat[42..];
-    let room_code = room_code.parse().expect("Error: Room code is invalid!");
+    let room_code = match room_code.parse::<u32>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let name = name.to_string();
-    let uuid = uuid.parse().expect("Error: UUID is invalid!");
+    let uuid = match uuid.parse::<Uuid>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let srv = srv.get_ref().clone();
     ws::start(WebsocketConnection::host(srv, room_code, name, uuid), &req, stream)
 }
@@ -73,14 +97,18 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, 
     let room_code = &dat[0..6];
     let uuid = &dat[6..42];
     let name = &dat[42..];
-    let room_code = room_code.parse().expect("Error: Room code is invalid!");
+    let room_code = match room_code.parse::<u32>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let name = name.to_string();
-    let uuid = uuid.parse().expect("Error: UUID is invalid!");
+    let uuid = match uuid.parse::<Uuid>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let srv = srv.get_ref().clone();
     ws::start(WebsocketConnection::player(srv, room_code, name, uuid), &req, stream)
 }
-
-//js will have to know the UUID of self and others in the lobby. We might have to store both because the other clients need to know the name
 
 #[get("/new_code")]
 pub async fn new_code() -> HttpResponse{
@@ -93,12 +121,3 @@ pub async fn new_uuid() -> HttpResponse{
     let uuid = uuid::Uuid::new_v4();
     HttpResponse::Ok().json(uuid)
 }
-
-// ws://ws_play to join as a player
-// ws://ws_host to join as a host
-
-//buzzer system
-// #[get()]
-// pub async fn start_buzzer() -> impl Responder{
-
-// }
