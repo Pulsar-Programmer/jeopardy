@@ -92,7 +92,7 @@ pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobb
 
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a player that can buzz.
-#[get("/ws_host/{dat}")]
+#[get("/ws_play/{dat}")]
 pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
     let room_code = &dat[0..6];
     let uuid = &dat[6..42];

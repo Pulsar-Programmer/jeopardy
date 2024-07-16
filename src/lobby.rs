@@ -44,15 +44,21 @@ pub struct Lobby {
 impl Lobby {
     fn send_message(&self, message: &ClientMessage, client_id: &Uuid) {
         if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
-            let _ = socket_recipient
-                .do_send(WsMessage { text: serde_json::to_string(message).unwrap() });
+            socket_recipient
+                .do_send(WsMessage { text: serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()) });
         } else {
             println!("attempting to send message but couldn't find user id.");
+            println!("{}", serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()));
         }
     }
     fn broadcast(&self, message: ClientMessage, room_code: u32){
         let Some(our_room) = self.rooms.get(&room_code) else { return };
         our_room.iter().for_each(|client_id|self.send_message(&message, client_id))
+    }
+    fn broadcast_others(&self, message: ClientMessage, room_code: u32, our_id: &Uuid){
+        self.broadcast_filter(message, room_code, |f|{
+            f != our_id
+        })
     }
     fn broadcast_host(&self, message: ClientMessage, room_code: u32){
         self.broadcast_filter(message, room_code, |f|{
@@ -76,6 +82,12 @@ impl Lobby {
         let Some(our_room) = self.rooms.get(&room_code) else { return };
         our_room.iter().filter(|&f|filter(f)).for_each(|client_id|self.send_message(&message, client_id))
     }
+    fn host_present(&self, room_code: &u32) -> bool{
+        match self.rooms.get(room_code) {
+            Some(room) => room.clients.iter().map(|id|self.sessions.get(id).map(|client|client.is_host).unwrap_or(false)).reduce(|a,b|a||b).unwrap_or(false),
+            None => false,
+        }
+    }
 }
 impl Actor for Lobby {
     type Context = Context<Self>;
@@ -96,22 +108,38 @@ pub struct Connect {
 impl Handler<Connect> for Lobby {
     type Result = ();
 
-    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, mut msg: Connect, _: &mut Context<Self>) -> Self::Result {
+
+        if self.sessions.contains_key(&msg.client_id){
+            msg.client_id = Uuid::new_v4();
+            msg.addr.do_send(WsMessage { text: "\"Kicked\"".to_string() });
+        }
 
         //only hosts can create a room
         if msg.is_host{
+            //If there are other hosts in the room, kick this one. (I can disable this feature)
+            if self.host_present(&msg.room_code){
+                msg.addr.do_send(WsMessage { text: "\"Kicked\"".to_string() });
+            }
+            //Create the room if it doesn't exist and join it.
             self.rooms
                 .entry(msg.room_code)
                 .or_default().insert(msg.client_id);
         } else {
-            msg.addr.do_send(WsMessage { text: serde_json::to_string(&ClientMessage::CodeNotFound).unwrap() })
+            match self.rooms.get_mut(&msg.room_code){
+                Some(room) => {
+                    if room.clients.iter().map(|id|self.sessions.get(id).map(|client|client.is_host).unwrap_or(false)).reduce(|a,b|a||b).unwrap_or(false){
+                        room.insert(msg.client_id);
+                    }
+                },
+                None => {
+                    println!("Odd happening!");
+                    msg.addr.do_send(WsMessage { text: "\"CodeNotFound\"".to_string() })
+                },
+            }
+            self.broadcast_others(ClientMessage::AddUser{ client_name: msg.client_name, client_id: msg.client_id }, msg.room_code, &msg.client_id);
         }
 
-        //todo!("If there are other hosts in the room, kick this one.")
-
-        self.broadcast(ClientMessage::AddUser{ client_name: msg.client_name, client_id: msg.client_id }, msg.room_code);
-
-        // store the address
         self.sessions.insert(
             msg.client_id,
             Client { recipient: msg.addr, is_host: msg.is_host },
@@ -131,17 +159,14 @@ impl Handler<Disconnect> for Lobby {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        if let Some(_client) = self.sessions.remove(&msg.client_id) {
+        if let Some(client) = self.sessions.remove(&msg.client_id) {
 
-            self.broadcast(ClientMessage::RemoveUser { client_id: msg.client_id }, msg.room_code);
+            self.broadcast_others(ClientMessage::RemoveUser { client_id: msg.client_id }, msg.room_code, &msg.client_id);
 
-            if let Some(room) = self.rooms.get_mut(&msg.room_code) {
-                if room.len() > 1 {
-                    room.remove(&msg.client_id);
-                } else {
-                    //only one in the lobby, remove it entirely
-                    self.rooms.remove(&msg.room_code);
-                }
+            if client.is_host {
+                self.broadcast_others(ClientMessage::Kicked, msg.room_code, &msg.client_id);
+                let Some(room) = self.rooms.get_mut(&msg.room_code) else {return}; 
+                room.clear();
             }
         }
     }

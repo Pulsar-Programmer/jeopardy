@@ -33,7 +33,7 @@ async function host(){
 }
 
 function add_user(name, id){
-    document.getElementById("players").innerHTML += `<p onclick="kick_user('${id}')" class="subtitle player" id="${id}">${name}</p>`;
+    document.getElementById("players").innerHTML += `<p class="subtitle player" id="${id}">${name}<button class="kick" onclick="kick_user('${id}')">X</button></p>`;
 }
 
 function remove_user(id){

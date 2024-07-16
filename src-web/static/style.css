@@ -1,5 +1,10 @@
-.player:hover{
-    color: red,
+.kick{
+    color: red;
+    padding-left: 10px;
+}
+.kick:hover{
+    font-weight: bolder;
+    cursor: pointer;
 }
 .buzzer {
     width: calc(200px + 10vw);

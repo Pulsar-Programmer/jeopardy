@@ -31,12 +31,13 @@ function connect(is_host, room_code, uuid, name) {
     }
 
     socket.onclose = () => {
-        console.log('Disconnected')
-        socket = null
+        alert("Unexpected close!");
+        console.log("Unexpected close!");
+        disconnect();
     }
 
     socket.onerror = (ev) => {
-        console.log(ev.data);
+        console.log(ev);
     }
 }
 
@@ -64,14 +65,14 @@ function handle_message_player(text){
     let object = JSON.parse(text);
     if(object.LockBuzzer){
         disable_buzzer();
-    } else if(object.Kicked){
+    } else if(object === "Kicked"){
         alert("Kicked from the lobby!");
         disconnect();
     } else if(object.StartTimer){
         round = object.StartTimer.round;
     } else if(object.PauseTimer){
         pause_timer();
-    } else if(object.CodeNotFound){
+    } else if(object === "CodeNotFound"){
         alert("Code not found!");
         disconnect();
     // } else if(object.AddUser){
@@ -129,4 +130,3 @@ function stop_timer() {
 // document.getElementById("start_timer").addEventListener("click", start_timer);
 // document.getElementById("pause_timer").addEventListener("click", pause_timer);
 // document.getElementById("stop_timer").addEventListener("click", stop_timer);
-
