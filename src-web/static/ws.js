@@ -70,8 +70,9 @@ function handle_message_player(text){
         disconnect();
     } else if(object.StartTimer){
         round = object.StartTimer.round;
+        start_timer(object.StartTimer.start / 1_000_000_000);
     } else if(object.PauseTimer){
-        pause_timer();
+        pause_timer(object.PauseTimer.at / 1_000_000_000);
     } else if(object === "CodeNotFound"){
         alert("Code not found!");
         disconnect();
@@ -113,16 +114,22 @@ function start_timer(secs) {
     }, 10);
 }
 
-function pause_timer(){
-    timer_enabled = false;
-}
+// function pause_timer(secs){
+//     seconds = secs;
+//     document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
+//     timer_enabled = false;
+// }
 
-function resume_timer(){
-    timer_enabled = true;
-}
+// function resume_timer(secs){
+//     seconds = secs;
+//     document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
+//     timer_enabled = true;
+// }
 
 
-function stop_timer() {
+function pause_timer(secs) {
+    seconds = secs;
+    document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
     timer_enabled = false;
     clearInterval(timer);
 }

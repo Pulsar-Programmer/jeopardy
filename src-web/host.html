@@ -18,9 +18,10 @@
         <p class="title is-5" id="gamecode">Game Code: {}</p>
         <div class="container has-text-centered">
             <p class="title is-5" id="timer">Timer: 0s</p>
-            <button class="button is-info">Start</button>
-            <button class="button is-warning">Pause</button>
-            <button class="button is-link">Reset</button>
+            <input type="number" id="start_time" placeholder="Enter Time">
+            <button class="button is-info" onclick="start()">Start</button>
+            <button class="button is-warning" onclick="pause()">Pause</button>
+            <button class="button is-link" onclick="restart()">Reset</button>
         </div>
         <br>
         <button class="button is-warning">Clear Buzzers</button>

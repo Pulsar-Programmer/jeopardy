@@ -57,8 +57,27 @@ function clear_buzzers(){
     text_socket("ClearBuzzers")
 }
 
+function start(){
+    let seconds = document.getElementById("timer").innerHTML;
+    seconds = seconds.replace("Timer: ", "");
+    seconds = seconds.replace("s", "");
+    start_timers(Number(seconds));
+}
+
+function pause(){
+    let seconds = document.getElementById("timer").innerHTML;
+    seconds = seconds.replace("Timer: ", "");
+    seconds = seconds.replace("s", "");
+    pause_timers(Number(seconds));
+}
+
+function restart(){
+    let seconds = document.getElementById("start_time").value;
+    start_timers(Number(seconds));
+}
+
 function start_timers(secs){
-    start_timer();
+    start_timer(secs);
     let nanos = 1_000_000_000 * secs; 
     data = {
         StartTimer: {
@@ -69,7 +88,7 @@ function start_timers(secs){
 }
 
 function pause_timers(secs){
-    resume_timer();
+    pause_timer(secs);
     let nanos = 1_000_000_000 * secs; 
     data = {
         PauseTimer : {

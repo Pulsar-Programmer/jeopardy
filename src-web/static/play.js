@@ -21,7 +21,8 @@ async function play(){
 
 function buzz(){
     let time = document.getElementById("timer").innerHTML;
-    time.replace("Timer: ", "");
+    time = time.replace("Timer: ", "");
+    time = time.replace("s", "");
     disable_buzzer();
     buzz_completed(time);
 }
