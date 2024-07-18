@@ -190,6 +190,9 @@ pub enum ClientMessage{
     },
     ///A message for when the code is not found in a room.
     CodeNotFound,
+    NewCode{
+        code: u32,
+    },
 }
 // impl ClientMessage{
 //     fn is_for_host(&self) -> bool{
@@ -211,7 +214,7 @@ pub enum ServerMessage{
     ///This is to kick a certain user.
     Kick{
         ///Identifies which user to kick.
-        uuid: Uuid, //do we need a username to identify them? I don't think so
+        uuid: Uuid,
     },
     ///This is sent to the clients to start the time of the buzzer. Every time it is sent by the host, make sure to increment the response.
     StartTimer{

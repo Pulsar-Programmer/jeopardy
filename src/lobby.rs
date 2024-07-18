@@ -1,4 +1,5 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, Message};
+use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 use crate::server::*;
@@ -199,6 +200,19 @@ impl Handler<LobbyMessage> for Lobby {
                     return;
                 }
                 self.send_message(&ClientMessage::Kicked, &uuid);
+
+                let mut code;
+                loop{
+                    code = rand::thread_rng().gen_range(100_000..1_000_000) as u32;
+                    if !self.rooms.contains_key(&code) {
+                        break
+                    }
+                }
+
+                let Some(val) = self.rooms.remove(&msg.room_code) else { return };
+                self.rooms.insert(code, val);
+
+                self.broadcast_host(ClientMessage::NewCode { code }, code)
             },
             ServerMessage::StartTimer { start } => {
                 let Some(room) = self.rooms.get_mut(&msg.room_code) else { return };

@@ -58,6 +58,8 @@ function handle_message_host(text){
         add_user(object.AddUser.client_name, object.AddUser.client_id);
     } else if(object.RemoveUser){
         remove_user(object.RemoveUser.client_id);
+    } else if(object.NewCode){
+        document.getElementById("gamecode").innerHTML = `Game Code: ${object.NewCode.code}`;
     }
 }
 
