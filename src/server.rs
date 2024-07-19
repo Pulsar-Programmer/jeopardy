@@ -150,7 +150,7 @@ impl Handler<WsMessage> for WebsocketConnection {
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
-pub struct Nanos(pub u128);
+pub struct Milles(pub u128);
 //use Duration or Nanos
 
 
@@ -166,20 +166,22 @@ pub struct Nanos(pub u128);
 pub enum ClientMessage{
     ///Locks the buzzer of the client.
     LockBuzzer,
+    ///Enables the buzzer of the client.
+    ClearBuzzer,
     ///Sent to a client when they are kicked from the lobby.
     Kicked,
     StartTimer{
-        start: Nanos,
+        start: Milles,
         ///Keeps track of which round the buzzer was started on.
         round: u32
     },
     PauseTimer{
-        at: Nanos,
+        at: Milles,
     },
     ///Sent to the host to compare only after the response is checked to match the current round of the lobby.
     BuzzCompleted{
         ///When the buzzer was hit.
-        at: Nanos,
+        at: Milles,
     },
     AddUser{
         client_name: String,
@@ -209,8 +211,8 @@ pub enum ClientMessage{
 pub enum ServerMessage{
     ///This is to lock all the buzzers.
     LockBuzzers,
-    // ///This is to enable all the buzzers back again.
-    // ClearBuzzers,
+    ///This is to enable all the buzzers back again.
+    ClearBuzzers,
     ///This is to kick a certain user.
     Kick{
         ///Identifies which user to kick.
@@ -218,15 +220,15 @@ pub enum ServerMessage{
     },
     ///This is sent to the clients to start the time of the buzzer. Every time it is sent by the host, make sure to increment the response.
     StartTimer{
-        start: Nanos,
+        start: Milles,
     },
     PauseTimer{
-        at: Nanos,
+        at: Milles,
     },
     ///This is sent to the host when a user buzzes. The host is meant to check against other BuzzCompleted signals for the shortest one.
     BuzzCompleted{
         ///When the buzzer was hit.
-        at: Nanos,
+        at: Milles,
         ///Which buzzer round it was sent to respond to (prevents time errors carrying into next rounds).
         response: u32,
     }

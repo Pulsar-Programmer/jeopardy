@@ -20,9 +20,7 @@ async function play(){
 }
 
 function buzz(){
-    let time = document.getElementById("timer").innerHTML;
-    time = time.replace("Timer: ", "");
-    time = time.replace("s", "");
+    let time = current_time();
     disable_buzzer();
     buzz_completed(time);
 }
@@ -43,11 +41,10 @@ function disable_buzzer(){
 
 // }
 
-function buzz_completed(secs){
-    let nanos = 1_000_000_000 * secs; 
+function buzz_completed(milles){
     data = {
         BuzzCompleted : {
-            at: nanos,
+            at: milles,
             response: round,
         }
     }

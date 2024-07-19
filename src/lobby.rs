@@ -194,6 +194,9 @@ impl Handler<LobbyMessage> for Lobby {
             ServerMessage::LockBuzzers => {
                 self.broadcast_players(ClientMessage::LockBuzzer, msg.room_code);
             },
+            ServerMessage::ClearBuzzers => {
+                self.broadcast_players(ClientMessage::ClearBuzzer, msg.room_code); 
+            },
             ServerMessage::Kick { uuid } => {
                 let Some(client) = self.sessions.get(&msg.client_id) else { return };
                 if !client.is_host{

@@ -58,41 +58,38 @@ function clear_buzzers(){
 }
 
 function start(){
-    let seconds = document.getElementById("timer").innerHTML;
-    seconds = seconds.replace("Timer: ", "");
-    seconds = seconds.replace("s", "");
-    start_timers(Number(seconds));
+    let seconds = setting;
+    start_timers(seconds);
 }
 
 function pause(){
-    let seconds = document.getElementById("timer").innerHTML;
-    seconds = seconds.replace("Timer: ", "");
-    seconds = seconds.replace("s", "");
-    pause_timers(Number(seconds));
+    let seconds = current_time();
+    console.log(`Pause: ${seconds}`);
+    pause_timers(seconds);
 }
 
-function restart(){
-    let seconds = document.getElementById("start_time").value;
-    start_timers(Number(seconds));
+function set(){
+    setting = document.getElementById("start_time").value * 1000;
+    start_time = Date.now();
+    let time = setting;
+    document.getElementById("timer").innerHTML = `Timer: ${Math.max(0, Math.floor(time / 1000))}s ${Math.max(0, time % 1000)}ms`;
 }
 
-function start_timers(secs){
-    start_timer(secs);
-    let nanos = 1_000_000_000 * secs; 
+function start_timers(milles){
+    start_timer(milles);
     data = {
         StartTimer: {
-            start: nanos,
+            start: milles,
         }
     }
     text_socket(JSON.stringify(data))
 }
 
-function pause_timers(secs){
-    pause_timer(secs);
-    let nanos = 1_000_000_000 * secs; 
+function pause_timers(milles){
+    pause_timer(milles);
     data = {
         PauseTimer : {
-            at: nanos,
+            at: milles,
         }
     }
     text_socket(JSON.stringify(data))

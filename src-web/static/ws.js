@@ -65,16 +65,18 @@ function handle_message_host(text){
 
 function handle_message_player(text){
     let object = JSON.parse(text);
-    if(object.LockBuzzer){
+    if(object === "LockBuzzer"){
         disable_buzzer();
+    } else if(object === "ClearBuzzer"){
+        enable_buzzer();
     } else if(object === "Kicked"){
         alert("Kicked from the lobby!");
         disconnect();
     } else if(object.StartTimer){
         round = object.StartTimer.round;
-        start_timer(object.StartTimer.start / 1_000_000_000);
+        start_timer(object.StartTimer.start / 1_000);
     } else if(object.PauseTimer){
-        pause_timer(object.PauseTimer.at / 1_000_000_000);
+        pause_timer(object.PauseTimer.at / 1_000);
     } else if(object === "CodeNotFound"){
         alert("Code not found!");
         disconnect();
@@ -89,53 +91,36 @@ function text_socket(text){
     socket.send(text);
 }
 
-
-var seconds = 0;
-var timer_enabled = false;
+var setting = 0;
+var start_time;
 var timer;
 
-function start_timer(secs) {
-    seconds = secs;
-    timer_enabled = true;
-    timer = setInterval(function() {
-        if (!timer_enabled) {
-            clearInterval(timer);
-            return;
-        }
-
-        seconds += 0.01; // Increment seconds
-        seconds = Math.floor(seconds * 100) / 100; // Round to two decimal places
-
-        document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
-
-        // If the count down is over, write some text 
-        if (seconds >= 60) { // Assuming you want to count up to 60 seconds
-            clearInterval(timer);
-            return;
-        }
-    }, 10);
+function start_timer(ms){
+    setting = ms;
+    start_time = Date.now();
+    clearInterval(timer);
+    timer = setInterval(update_display, 1);
 }
 
-// function pause_timer(secs){
-//     seconds = secs;
-//     document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
-//     timer_enabled = false;
-// }
-
-// function resume_timer(secs){
-//     seconds = secs;
-//     document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
-//     timer_enabled = true;
-// }
-
-
-function pause_timer(secs) {
-    seconds = secs;
-    document.getElementById("timer").innerHTML = `Timer: ${seconds}s`;
-    timer_enabled = false;
+function pause_timer(ms){
+    setting = ms;
+    document.getElementById("timer").innerHTML = `Timer: ${Math.max(0, Math.floor(ms / 1000))}s ${Math.max(0, ms % 1000)}ms`;
     clearInterval(timer);
 }
 
-// document.getElementById("start_timer").addEventListener("click", start_timer);
-// document.getElementById("pause_timer").addEventListener("click", pause_timer);
-// document.getElementById("stop_timer").addEventListener("click", stop_timer);
+function update_display() {
+    console.log(setting);
+    console.log(start_time);
+    let time = current_time();
+    document.getElementById("timer").innerHTML = `Timer: ${Math.max(0, Math.floor(time / 1000))}s ${Math.max(0, time % 1000)}ms`;
+    if (time === 0 ){
+        pause_timer(0);
+    }
+}
+
+function current_time(){
+    let current_time = Date.now();
+    let elapsed_time = current_time - start_time;
+    let mille = Math.floor(elapsed_time);
+    return Math.max(0, setting - mille);
+}

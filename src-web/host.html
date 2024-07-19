@@ -21,10 +21,11 @@
             <input type="number" id="start_time" placeholder="Enter Time">
             <button class="button is-info" onclick="start()">Start</button>
             <button class="button is-warning" onclick="pause()">Pause</button>
-            <button class="button is-link" onclick="restart()">Reset</button>
+            <button class="button is-link" onclick="set()">Set</button>
         </div>
         <br>
-        <button class="button is-warning">Clear Buzzers</button>
+        <button class="button is-warning" onclick="clear_buzzers()">Clear Buzzers</button>
+        <button class="button is-danger" onclick="lock_buzzers()">Lock Buzzers</button>
         <br>
         <br>
         <div class="notification is-primary is-flex is-flex-direction-column" id="players">
