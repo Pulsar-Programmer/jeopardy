@@ -5,18 +5,8 @@ document.addEventListener('DOMContentLoaded', play);
 async function play(){
     let name = urlParams.get('name');
     let code = urlParams.get('code');
-    let uuid;
-    
-    await fetch("/new_uuid", {
-        method: 'GET', 
-    })
-    .then(handle)
-    .then(new_uuid => {
-        uuid = new_uuid;
-    })
-    .catch(notify);
 
-    connect(false, code, uuid, name);
+    connect(false, code, name);
 }
 
 function buzz(){
