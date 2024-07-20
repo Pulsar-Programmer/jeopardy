@@ -5,17 +5,7 @@ document.addEventListener('DOMContentLoaded', host);
 async function host(){
 
     let name = "Host";
-    let uuid;
     let code;
-    
-    await fetch("/new_uuid", {
-        method: 'GET',
-    })
-    .then(handle)
-    .then(new_uuid => {
-        uuid = new_uuid;
-    })
-    .catch(notify);
 
     await fetch("/new_code", {
         method: 'GET', 
@@ -27,7 +17,7 @@ async function host(){
     })
     .catch(notify);
 
-    connect(true, code, uuid, name);
+    connect(true, code, name);
 
     document.getElementById("gamecode").innerHTML = `Game Code: ${code}`;
 }

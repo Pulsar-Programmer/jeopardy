@@ -3,7 +3,7 @@ var socket = null;
 
 var round = 0;
 
-function connect(is_host, room_code, uuid, name) {
+function connect(is_host, room_code, name) {
     disconnect()
 
     const { location } = window
@@ -11,7 +11,7 @@ function connect(is_host, room_code, uuid, name) {
     const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws'
     const wsUri = `${protocol}://${location.host}/ws_${is_host ? "host" : "play"}`
     
-    const wsUriData = `${wsUri}/${room_code}${uuid}${name}`;
+    const wsUriData = `${wsUri}/${room_code}${name}`;
 
     console.log('Connecting...')
     socket = new WebSocket(wsUriData)
@@ -80,6 +80,8 @@ function handle_message_player(text){
     } else if(object === "CodeNotFound"){
         alert("Code not found!");
         disconnect();
+    } else if(object.YourUuid){
+        
     // } else if(object.AddUser){
     //     add_user(object.AddUser.client_name, object.AddUser.client_id);
     // } else if(object.RemoveUser){
