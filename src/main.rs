@@ -1,8 +1,6 @@
 use actix::Actor;
 use actix_identity::IdentityMiddleware;
-use actix_session::SessionMiddleware;
-use actix_session_surrealdb::SurrealSessionStore;
-use actix_web::{cookie::Key, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
 use chrono::Duration;
 
@@ -45,42 +43,18 @@ macro_rules! wapp {
 //     actix_web::HttpResponse::Ok().body(TEST)
 // }
 
-
-pub async fn setup_db() -> surrealdb::Result<Surreal<Client>>{
-    let db = Surreal::new::<Ws>("localhost:8000").await?;
-
-    db.signin(Root {
-        username: "root",
-        password: "root",
-    }).await?;
-
-    db.use_ns("jeopardic").use_db("main").await?;
-
-    Ok(db)
-}
-
 #[actix_web::main]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
 async fn main() -> std::io::Result<()> {
-
-    let db = setup_db().await.expect("Database connection error.");
-
     let server: lobby::Lobby = Default::default();
     let server = server.start();
-
-    let key = Key::generate();
     HttpServer::new(move|| {
         wapp!(
             App::new()
-            .wrap(IdentityMiddleware::builder() 
-                .visit_deadline(Some(Duration::days(30).to_std().unwrap()))
-                .login_deadline(Some(Duration::days(365).to_std().unwrap()))
+            .wrap(IdentityMiddleware::builder()
+                .visit_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(30).to_std().unwrap()))
+                .login_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(365).to_std().unwrap()))
                 .build()
             )
-            .wrap(SessionMiddleware::builder(
-                SurrealSessionStore::from_connection(db.clone(), "sessions"),
-                key.clone()
-            ).build())
             .wrap(
                 actix_web::middleware::ErrorHandlers::new()
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
@@ -90,7 +64,7 @@ async fn main() -> std::io::Result<()> {
             
             homepage, join,
             host, play,
-            new_code,
+            new_code, new_uuid,
             ws_host, ws_play
         )
     })
@@ -101,7 +75,6 @@ async fn main() -> std::io::Result<()> {
 }
 
 use actix_web::{middleware::ErrorHandlerResponse, dev::ServiceResponse};
-use surrealdb::{engine::remote::ws::{Client, Ws}, opt::auth::Root, Surreal};
 fn not_found<B>(res: ServiceResponse<B>) -> actix_web::error::Result<ErrorHandlerResponse<B>> {
     // split service response into request and response components
     let (req, res) = res.into_parts();

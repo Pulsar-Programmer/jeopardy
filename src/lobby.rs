@@ -109,9 +109,12 @@ pub struct Connect {
 impl Handler<Connect> for Lobby {
     type Result = ();
 
-    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, mut msg: Connect, _: &mut Context<Self>) -> Self::Result {
 
-        // msg.addr.do_send(WsMessage{ text: serde_json::to_string(&ClientMessage::YourUuid { uuid : msg.client_id }).unwrap() });
+        if self.sessions.contains_key(&msg.client_id){
+            msg.client_id = Uuid::new_v4();
+            msg.addr.do_send(WsMessage { text: "\"Kicked\"".to_string() });
+        }
 
         //only hosts can create a room
         if msg.is_host{

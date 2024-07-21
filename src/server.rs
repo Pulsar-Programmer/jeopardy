@@ -195,9 +195,6 @@ pub enum ClientMessage{
     NewCode{
         code: u32,
     },
-    // YourUuid{
-    //     uuid: Uuid,
-    // },
 }
 // impl ClientMessage{
 //     fn is_for_host(&self) -> bool{

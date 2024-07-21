@@ -1,6 +1,5 @@
 use actix::Addr;
-use actix_identity::Identity;
-use actix_web::{get, http::header::ContentType, web::{self, Data, Path}, Error, HttpMessage as _, HttpRequest, HttpResponse, Responder, ResponseError};
+use actix_web::{get, http::header::ContentType, web::{self, Data, Path}, Error, HttpRequest, HttpResponse, Responder, ResponseError};
 use actix_web_actors::ws;
 use rand::Rng;
 use uuid::Uuid;
@@ -74,15 +73,19 @@ impl ResponseError for ParseError{
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a host that moderates the game.
 #[get("/ws_host/{dat}")]
-pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobby>>, dat: Path<String>, identity: Option<Identity>) -> Result<HttpResponse, Error> {
+pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobby>>, dat: Path<String>) -> Result<HttpResponse, Error> {
     let room_code = &dat[0..6];
-    let uuid = extract_uuid(identity, &req);
-    let name = &dat[6..];
+    let uuid = &dat[6..42];
+    let name = &dat[42..];
     let room_code = match room_code.parse::<u32>(){
         Ok(t) => t,
         Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
     };
     let name = name.to_string();
+    let uuid = match uuid.parse::<Uuid>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let srv = srv.get_ref().clone();
     ws::start(WebsocketConnection::host(srv, room_code, name, uuid), &req, stream)
 }
@@ -90,15 +93,19 @@ pub async fn ws_host(req: HttpRequest, stream: web::Payload, srv: Data<Addr<Lobb
 /// WebSocket handshake and start `MyWebSocket` actor.
 /// This is to join as a player that can buzz.
 #[get("/ws_play/{dat}")]
-pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, srv: Data<Addr<Lobby>>, identity: Option<Identity>) -> Result<HttpResponse, Error> {
+pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, srv: Data<Addr<Lobby>>) -> Result<HttpResponse, Error> {
     let room_code = &dat[0..6];
-    let uuid = extract_uuid(identity, &req);
-    let name = &dat[6..];
+    let uuid = &dat[6..42];
+    let name = &dat[42..];
     let room_code = match room_code.parse::<u32>(){
         Ok(t) => t,
         Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
     };
     let name = name.to_string();
+    let uuid = match uuid.parse::<Uuid>(){
+        Ok(t) => t,
+        Err(e) => return Err(Error::from(ParseError{error: e.to_string()}))
+    };
     let srv = srv.get_ref().clone();
     ws::start(WebsocketConnection::player(srv, room_code, name, uuid), &req, stream)
 }
@@ -109,24 +116,8 @@ pub async fn new_code() -> HttpResponse{
     HttpResponse::Ok().json(code)
 }
 
-fn extract_uuid(identity: Option<Identity>, http_request: &HttpRequest) -> Uuid{
-    let Some(identity) = identity else { return new_uuid(http_request) };
-    let Ok(Ok(uuid)) = identity.id().map(|s|s.parse::<Uuid>()) else { return new_uuid(http_request) };
-    uuid
+#[get("/new_uuid")]
+pub async fn new_uuid() -> HttpResponse{
+    let uuid = uuid::Uuid::new_v4();
+    HttpResponse::Ok().json(uuid)
 }
-
-#[allow(clippy::expect_used)]
-fn new_uuid(http_request: &HttpRequest) -> Uuid{
-    let uuid = Uuid::new_v4();
-    login_user(http_request, uuid).expect("Error logging user in.");
-    uuid
-}
-
-fn login_user(http_request: &HttpRequest, uuid: Uuid) -> Result<Identity, actix_identity::error::LoginError>{
-    // session.renew();
-    Identity::login(&http_request.extensions(), uuid.to_string())
-}
-
-// fn logout_user(identity: Identity){
-//     identity.logout()
-// }
