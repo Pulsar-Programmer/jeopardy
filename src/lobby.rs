@@ -56,6 +56,18 @@ impl Lobby {
         let Some(our_room) = self.rooms.get(&room_code) else { return };
         our_room.iter().for_each(|client_id|self.send_message(&message, client_id))
     }
+    fn broadcast_new_code(&self, message: NewCode, room_code: u32){
+        let Some(our_room) = self.rooms.get(&room_code) else { return };
+        our_room.iter().for_each(|client_id|{
+            if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
+                socket_recipient
+                    .do_send(message);
+            } else {
+                println!("attempting to send message but couldn't find user id.");
+                println!("{}", serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()));
+            }
+        })
+    }
     fn broadcast_others(&self, message: ClientMessage, room_code: u32, our_id: &Uuid){
         self.broadcast_filter(message, room_code, |f|{
             f != our_id
@@ -211,10 +223,12 @@ impl Handler<LobbyMessage> for Lobby {
                     }
                 }
 
+                self.broadcast_host(ClientMessage::NewCode { code }, msg.room_code);
+
                 let Some(val) = self.rooms.remove(&msg.room_code) else { return };
                 self.rooms.insert(code, val);
 
-                self.broadcast_host(ClientMessage::NewCode { code }, code);
+                self.broadcast_new_code(NewCode { new_code: code });
 
                 self.send_message(&ClientMessage::Kicked, &uuid);
             },

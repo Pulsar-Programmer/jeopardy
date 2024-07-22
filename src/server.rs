@@ -149,6 +149,20 @@ impl Handler<WsMessage> for WebsocketConnection {
     }
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct NewCode{
+    pub new_code: u32,
+}
+
+impl Handler<NewCode> for WebsocketConnection{
+    type Result = ();
+
+    fn handle(&mut self, msg: NewCode, ctx: &mut Self::Context) -> Self::Result {
+        self.room_code = msg.new_code;
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Milles(pub u128);
 //use Duration or Nanos
