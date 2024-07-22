@@ -53,7 +53,7 @@ function disconnect() {
 function handle_message_host(text){
     let object = JSON.parse(text);
     if(object.BuzzCompleted){
-        // pause_timers(object.BuzzCompleted.at)
+        new_buzz(object.BuzzCompleted.at, object.BuzzCompleted.client_id);
     } else if(object.AddUser){
         add_user(object.AddUser.client_name, object.AddUser.client_id);
     } else if(object.RemoveUser){

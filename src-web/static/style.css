@@ -30,3 +30,21 @@
     width: 20px;
     height: 20px;
 } 
+.first {
+    background-color: rgb(255, 191, 0);
+}
+.buzzed {
+    background-color: rgb(0, 186, 0);
+}
+.card{
+    width: fit-content;
+    max-height: 25px;
+    min-width: 50px;
+    min-height: 25px;
+    border-radius: 10px;
+    color: black;
+    font-size: 12pt;
+}
+.unbuzzed {
+    background-color: rgb(255, 72, 0);
+}

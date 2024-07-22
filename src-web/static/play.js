@@ -20,7 +20,7 @@ async function play(){
 }
 
 function buzz(){
-    let time = current_time();
+    let time = timer ? current_time() : setting;
     disable_buzzer();
     buzz_completed(time);
 }
@@ -36,10 +36,6 @@ function disable_buzzer(){
     buzzer.disabled = true;
     buzzer.innerHTML = "Buzzed!"
 }
-
-// function clear_buzzer(){
-
-// }
 
 function buzz_completed(milles){
     data = {

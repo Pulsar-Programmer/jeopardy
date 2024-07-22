@@ -253,7 +253,7 @@ impl Handler<LobbyMessage> for Lobby {
                     println!("Rounds did not match!"); 
                     return 
                 };
-                self.broadcast_host(ClientMessage::BuzzCompleted { at }, msg.room_code)
+                self.broadcast_host(ClientMessage::BuzzCompleted { at, client_id: msg.client_id }, msg.room_code)
             },
         }        
     }

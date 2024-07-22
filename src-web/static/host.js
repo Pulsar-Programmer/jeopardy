@@ -33,7 +33,7 @@ async function host(){
 }
 
 function add_user(name, id){
-    document.getElementById("players").innerHTML += `<p class="subtitle player" id="${id}">${name}<button class="kick" onclick="kick_user('${id}')">X</button></p>`;
+    document.getElementById("players").innerHTML += `<p class="subtitle player" id="${id}"><button class="unbuzzed card">--.--</button> ${name}<button class="kick" onclick="kick_user('${id}')">X</button></p>`;
 }
 
 function remove_user(id){
@@ -50,11 +50,13 @@ function kick_user(id){
 }
 
 function lock_buzzers(){
-    text_socket(`"LockBuzzers"`)
+    text_socket(`"LockBuzzers"`);
 }
 
 function clear_buzzers(){
-    text_socket(`"ClearBuzzers"`)
+    buzzed = [];
+    update_buzzed();
+    text_socket(`"ClearBuzzers"`);
 }
 
 function start(){
@@ -101,5 +103,32 @@ function pause_timers(milles){
     text_socket(JSON.stringify(data))
     if(document.getElementById("pause_merge").checked){
         lock_buzzers();
+    }
+}
+
+var buzzed = [];
+
+function new_buzz(at, uuid){
+    buzzed.push({at, uuid});
+    update_buzzed();
+}
+
+function update_buzzed(){
+    Array.from(document.getElementsByClassName("card")).forEach((elem) => {
+        elem.className = "unbuzzed card";
+        elem.innerHTML = "--.--";
+    });
+    let highest = {at: 0, uuid: "none"};
+    buzzed.forEach(({at, uuid}) => {
+        let elem = document.getElementById(uuid).querySelector('.card');
+        elem.className = "buzzed card";
+        elem.innerHTML = `${Math.floor(at / 1000)}.${at % 1000}`;
+        if(highest.at <= at){
+            highest = {at, uuid};
+        }
+    });
+    if(highest.uuid !== "none"){
+        let best = document.getElementById(highest.uuid).querySelector('.card');
+        best.className = "first card";
     }
 }

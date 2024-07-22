@@ -185,6 +185,8 @@ pub enum ClientMessage{
     BuzzCompleted{
         ///When the buzzer was hit.
         at: Milles,
+        ///Who completed it.
+        client_id: Uuid,
     },
     AddUser{
         client_name: String,
