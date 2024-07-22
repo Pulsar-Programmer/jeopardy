@@ -145,21 +145,10 @@ impl Handler<WsMessage> for WebsocketConnection {
     type Result = ();
 
     fn handle(&mut self, msg: WsMessage, ctx: &mut Self::Context) {
+        if let Ok(ClientMessage::NewCode{code}) = serde_json::from_str::<ClientMessage>(&msg.text) {
+            self.room_code = code;
+        }
         ctx.text(msg.text)
-    }
-}
-
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct NewCode{
-    pub new_code: u32,
-}
-
-impl Handler<NewCode> for WebsocketConnection{
-    type Result = ();
-
-    fn handle(&mut self, msg: NewCode, ctx: &mut Self::Context) -> Self::Result {
-        self.room_code = msg.new_code;
     }
 }
 
