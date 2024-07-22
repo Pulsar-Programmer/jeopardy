@@ -50,11 +50,11 @@ function kick_user(id){
 }
 
 function lock_buzzers(){
-    text_socket("LockBuzzers")
+    text_socket(`"LockBuzzers"`)
 }
 
 function clear_buzzers(){
-    text_socket("ClearBuzzers")
+    text_socket(`"ClearBuzzers"`)
 }
 
 function start(){

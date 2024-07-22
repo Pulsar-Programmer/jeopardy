@@ -202,7 +202,6 @@ impl Handler<LobbyMessage> for Lobby {
                 if !client.is_host{
                     return;
                 }
-                self.send_message(&ClientMessage::Kicked, &uuid);
 
                 let mut code;
                 loop{
@@ -215,7 +214,9 @@ impl Handler<LobbyMessage> for Lobby {
                 let Some(val) = self.rooms.remove(&msg.room_code) else { return };
                 self.rooms.insert(code, val);
 
-                self.broadcast_host(ClientMessage::NewCode { code }, code)
+                self.broadcast_host(ClientMessage::NewCode { code }, code);
+
+                self.send_message(&ClientMessage::Kicked, &uuid);
             },
             ServerMessage::StartTimer { start } => {
                 let Some(room) = self.rooms.get_mut(&msg.room_code) else { return };

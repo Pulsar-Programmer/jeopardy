@@ -74,9 +74,9 @@ function handle_message_player(text){
         disconnect();
     } else if(object.StartTimer){
         round = object.StartTimer.round;
-        start_timer(object.StartTimer.start / 1_000);
+        start_timer(object.StartTimer.start);
     } else if(object.PauseTimer){
-        pause_timer(object.PauseTimer.at / 1_000);
+        pause_timer(object.PauseTimer.at);
     } else if(object === "CodeNotFound"){
         alert("Code not found!");
         disconnect();
