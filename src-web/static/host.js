@@ -63,7 +63,7 @@ function start(){
 }
 
 function pause(){
-    let seconds = current_time();
+    let seconds = timer ? current_time() : setting;
     console.log(`Pause: ${seconds}`);
     pause_timers(seconds);
 }
@@ -73,6 +73,9 @@ function set(){
     start_time = Date.now();
     let time = setting;
     document.getElementById("timer").innerHTML = `Timer: ${Math.max(0, Math.floor(time / 1000))}s ${Math.max(0, time % 1000)}ms`;
+    if(document.getElementById("set_merge").checked){
+        start();
+    }
 }
 
 function start_timers(milles){
@@ -83,6 +86,9 @@ function start_timers(milles){
         }
     }
     text_socket(JSON.stringify(data))
+    if(document.getElementById("start_merge").checked){
+        clear_buzzers();
+    }
 }
 
 function pause_timers(milles){
@@ -93,4 +99,7 @@ function pause_timers(milles){
         }
     }
     text_socket(JSON.stringify(data))
+    if(document.getElementById("pause_merge").checked){
+        lock_buzzers();
+    }
 }

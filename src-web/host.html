@@ -26,8 +26,17 @@
         <br>
         <button class="button is-info" onclick="clear_buzzers()">Clear Buzzers</button>
         <button class="button is-danger" onclick="lock_buzzers()">Lock Buzzers</button>
-        <br>
-        <br>
+        <div class="checks">
+            <label class="checkbox">
+                <input type="checkbox" id="set_merge"/> Make Set automatically Start
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="start_merge"/> Merge Start with Clear Buzzers
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="pause_merge"/> Merge Pause with Lock Buzzers
+            </label>
+        </div>
         <div class="notification is-primary is-flex is-flex-direction-column" id="players">
             <p class="title is-4">Players:</p>
         </div>

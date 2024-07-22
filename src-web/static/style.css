@@ -19,3 +19,14 @@
     background-color: #6e89a8;
     color: rgb(0, 0, 0);
 }
+.checks{
+    flex-direction: column;
+    display: flex;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 14pt;
+}
+.checks input[type=checkbox] {
+    width: 20px;
+    height: 20px;
+} 

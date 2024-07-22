@@ -53,7 +53,7 @@ function disconnect() {
 function handle_message_host(text){
     let object = JSON.parse(text);
     if(object.BuzzCompleted){
-
+        // pause_timers(object.BuzzCompleted.at)
     } else if(object.AddUser){
         add_user(object.AddUser.client_name, object.AddUser.client_id);
     } else if(object.RemoveUser){
@@ -93,7 +93,7 @@ function text_socket(text){
 
 var setting = 0;
 var start_time;
-var timer;
+var timer = null;
 
 function start_timer(ms){
     setting = ms;
@@ -106,6 +106,7 @@ function pause_timer(ms){
     setting = ms;
     document.getElementById("timer").innerHTML = `Timer: ${Math.max(0, Math.floor(ms / 1000))}s ${Math.max(0, ms % 1000)}ms`;
     clearInterval(timer);
+    timer = null;
 }
 
 function update_display() {

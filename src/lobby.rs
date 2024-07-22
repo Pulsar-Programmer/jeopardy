@@ -1,5 +1,4 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, Message};
-use futures::FutureExt;
 use rand::Rng;
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
@@ -236,7 +235,7 @@ impl Handler<LobbyMessage> for Lobby {
 
                 let Some(val) = self.rooms.remove(&msg.room_code) else { return };
                 self.rooms.insert(code, val);
-                
+
                 self.send_message(&ClientMessage::Kicked, &uuid);
             },
             ServerMessage::StartTimer { start } => {
