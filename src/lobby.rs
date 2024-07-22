@@ -53,16 +53,16 @@ impl Lobby {
             println!("{}", serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()));
         }
     }
-    async fn send_message_sensitive(&self, message: &ClientMessage, client_id: &Uuid) {
-        if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
-            socket_recipient
-                .send(WsMessage { text: serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()) }).await.unwrap_or_default();
-            //we use send here because of the urgency of the NewCode message (it may take more work to decouple them but could be worth it)
-        } else {
-            println!("attempting to send message but couldn't find user id.");
-            println!("{}", serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()));
-        }
-    }
+    // async fn send_message_sensitive(&self, message: &ClientMessage, client_id: &Uuid) {
+    //     if let Some(Client { recipient: socket_recipient, .. }) = self.sessions.get(client_id) {
+    //         socket_recipient
+    //             .send(WsMessage { text: serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()) }).await.unwrap_or_default();
+    //         //we use send here because of the urgency of the NewCode message (it may take more work to decouple them but could be worth it)
+    //     } else {
+    //         println!("attempting to send message but couldn't find user id.");
+    //         println!("{}", serde_json::to_string(message).unwrap_or("\"SerdeError\"".to_string()));
+    //     }
+    // }
     fn broadcast(&self, message: ClientMessage, room_code: u32){
         let Some(our_room) = self.rooms.get(&room_code) else { return };
         our_room.iter().for_each(|client_id|self.send_message(&message, client_id))
@@ -72,11 +72,11 @@ impl Lobby {
             f != our_id
         })
     }
-    async fn broadcast_others_sensitive(&self, message: ClientMessage, room_code: u32, our_id: &Uuid){
-        self.broadcast_filter_sensitive(message, room_code, |f|{
-            f != our_id
-        }).await
-    }
+    // async fn broadcast_others_sensitive(&self, message: ClientMessage, room_code: u32, our_id: &Uuid){
+    //     self.broadcast_filter_sensitive(message, room_code, |f|{
+    //         f != our_id
+    //     }).await
+    // }
     fn broadcast_host(&self, message: ClientMessage, room_code: u32){
         self.broadcast_filter(message, room_code, |f|{
             if let Some(client) = self.sessions.get(f){
@@ -99,12 +99,12 @@ impl Lobby {
         let Some(our_room) = self.rooms.get(&room_code) else { return };
         our_room.iter().filter(|&f|filter(f)).for_each(|client_id|self.send_message(&message, client_id))
     }
-    async fn broadcast_filter_sensitive(&self, message: ClientMessage, room_code: u32, mut filter: impl FnMut(&Uuid) -> bool){
-        let Some(our_room) = self.rooms.get(&room_code) else { return };
-        for client_id in our_room.iter().filter(|&f|filter(f)){
-            self.send_message_sensitive(&message, client_id).await
-        }
-    }
+    // async fn broadcast_filter_sensitive(&self, message: ClientMessage, room_code: u32, mut filter: impl FnMut(&Uuid) -> bool){
+    //     let Some(our_room) = self.rooms.get(&room_code) else { return };
+    //     for client_id in our_room.iter().filter(|&f|filter(f)){
+    //         self.send_message_sensitive(&message, client_id).await
+    //     }
+    // }
     fn host_present(&self, room_code: &u32) -> bool{
         match self.rooms.get(room_code) {
             Some(room) => room.clients.iter().map(|id|self.sessions.get(id).map(|client|client.is_host).unwrap_or(false)).reduce(|a,b|a||b).unwrap_or(false),
@@ -232,11 +232,11 @@ impl Handler<LobbyMessage> for Lobby {
                     }
                 }
 
-                self.broadcast_others_sensitive(ClientMessage::NewCode { code }, msg.room_code, &uuid).now_or_never();
+                self.broadcast(ClientMessage::NewCode { code }, msg.room_code);
 
                 let Some(val) = self.rooms.remove(&msg.room_code) else { return };
                 self.rooms.insert(code, val);
-
+                
                 self.send_message(&ClientMessage::Kicked, &uuid);
             },
             ServerMessage::StartTimer { start } => {
