@@ -109,8 +109,14 @@ function pause_timers(milles){
 var buzzed = [];
 
 function new_buzz(at, uuid){
+    if(document.getElementById("pause_buzz").checked){
+        pause_timers(at);
+    }
     buzzed.push({at, uuid});
     update_buzzed();
+    if(document.getElementById("pause_all_buzz").checked && Array.from(document.getElementsByClassName("card")).length === buzzed.length){
+        pause_timers(at);
+    }
 }
 
 function update_buzzed(){
