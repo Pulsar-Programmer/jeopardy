@@ -33,7 +33,7 @@ async function host(){
 }
 
 function add_user(name, id){
-    document.getElementById("players").innerHTML += `<p class="subtitle player" id="${id}"><button class="unbuzzed card">--.--</button> ${name}<button class="kick" onclick="kick_user('${id}')">X</button></p>`;
+    document.getElementById("players").innerHTML += `<p class="subtitle player" id="${id}"><button class="unbuzzed card" onclick="reset_buzz('${id}')">--.--</button> ${name}<button class="kick" onclick="kick_user('${id}')">X</button></p>`;
 }
 
 function remove_user(id){
@@ -137,4 +137,17 @@ function update_buzzed(){
         let best = document.getElementById(highest.uuid).querySelector('.card');
         best.className = "first card";
     }
+}
+
+function reset_buzz(id){
+    let elem = document.getElementById(id).querySelector('.card');
+    elem.className = "unbuzzed card";
+    elem.innerHTML = "--.--";
+    let new_buzzed = [];
+    buzzed.forEach(({at, uuid}) => {
+        if(uuid !== id){
+            new_buzzed.push({at, uuid})
+        }
+    });
+    buzzed = new_buzzed;
 }
