@@ -1,5 +1,5 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, Message};
-use rand::Rng;
+use rand::{Rng, RngExt};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 use crate::server::*;
@@ -225,7 +225,7 @@ impl Handler<LobbyMessage> for Lobby {
 
                 let mut code;
                 loop{
-                    code = rand::thread_rng().gen_range(100_000..1_000_000) as u32;
+                    code = rand::rng().random_range(100_000..1_000_000) as u32;
                     if !self.rooms.contains_key(&code) {
                         break
                     }

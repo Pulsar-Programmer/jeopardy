@@ -1,8 +1,5 @@
 use actix::Actor;
-use actix_identity::IdentityMiddleware;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-
-use chrono::Duration;
+use actix_web::{web, App, HttpResponse, HttpServer};
 
 mod endpoints;
 use endpoints::*;
@@ -61,11 +58,6 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move|| {
         wapp!(
             App::new()
-            .wrap(IdentityMiddleware::builder()
-                .visit_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(30).to_std().unwrap()))
-                .login_deadline(#[allow(clippy::unwrap_used)] Some(Duration::days(365).to_std().unwrap()))
-                .build()
-            )
             .wrap(
                 actix_web::middleware::ErrorHandlers::new()
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)

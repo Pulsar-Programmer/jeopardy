@@ -33,6 +33,9 @@ COPY --from=builder /app/src-web /app/src-web
 # Koyeb uses this
 ENV PORT=8080
 
+ENV RUST_LOG=debug
+ENV RUST_BACKTRACE=1
+
 EXPOSE 8080
 
 CMD ["./jeopardy"]

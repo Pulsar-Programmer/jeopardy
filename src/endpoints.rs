@@ -1,7 +1,7 @@
 use actix::Addr;
 use actix_web::{get, http::header::ContentType, web::{self, Data, Path}, Error, HttpRequest, HttpResponse, Responder, ResponseError};
 use actix_web_actors::ws;
-use rand::Rng;
+use rand::{Rng, RngExt};
 use uuid::Uuid;
 use crate::{lobby::Lobby, server::WebsocketConnection};
 
@@ -112,7 +112,7 @@ pub async fn ws_play(req: HttpRequest, stream: web::Payload, dat: Path<String>, 
 
 #[get("/new_code")]
 pub async fn new_code() -> HttpResponse{
-    let code = rand::thread_rng().gen_range(100_000..1_000_000) as u32;
+    let code = rand::rng().random_range(100_000..1_000_000) as u32;
     HttpResponse::Ok().json(code)
 }
 
