@@ -53,6 +53,9 @@ async fn main() -> std::io::Result<()> {
 
     println!("Loaded environment variables!");
 
+    let static_dir = std::path::PathBuf::from("./src-web/static");
+    println!("Static dir exists: {}", static_dir.exists());
+
     let server: lobby::Lobby = Default::default();
     let server = server.start();
     HttpServer::new(move|| {
@@ -68,7 +71,7 @@ async fn main() -> std::io::Result<()> {
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
             )
             .app_data(web::Data::new(server.clone()))
-            .service(actix_files::Files::new("/src-web/static", "./src-web/static"));
+            .service(actix_files::Files::new("/src-web/static", &static_dir));
             
             homepage, join,
             host, play,
@@ -80,6 +83,10 @@ async fn main() -> std::io::Result<()> {
     // .workers(2)
     .run()
     .await
+    .map_err(|e| {
+        eprintln!("Server error: {e}");
+        e
+    })
 }
 
 use actix_web::{middleware::ErrorHandlerResponse, dev::ServiceResponse};
