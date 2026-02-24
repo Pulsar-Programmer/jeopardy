@@ -31,11 +31,11 @@ COPY --from=builder /app/target/release/jeopardy /app/jeopardy
 COPY --from=builder /app/src-web /app/src-web
 
 # Koyeb uses this
-ENV PORT=8080
+ENV PORT=8000
 
 ENV RUST_LOG=debug
 ENV RUST_BACKTRACE=1
 
-EXPOSE 8080
+EXPOSE 8000
 
 CMD ["./jeopardy"]
