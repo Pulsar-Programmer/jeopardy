@@ -45,6 +45,14 @@ macro_rules! wapp {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenvy::dotenv().unwrap_or_default();
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "8080".into())
+        .parse()
+        .expect("PORT must be a number");
+
+    println!("Loaded environment variables!");
+
     let server: lobby::Lobby = Default::default();
     let server = server.start();
     HttpServer::new(move|| {
@@ -68,7 +76,7 @@ async fn main() -> std::io::Result<()> {
             ws_host, ws_play
         )
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", port))?
     // .workers(2)
     .run()
     .await
