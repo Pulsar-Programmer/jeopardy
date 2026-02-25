@@ -44,18 +44,20 @@ macro_rules! wapp {
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().unwrap_or_default();
     let port: u16 = std::env::var("PORT")
-        .unwrap_or_else(|_| "8080".into())
-        .parse()
-        .expect("PORT must be a number");
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(8080);
 
     println!("Loaded environment variables!");
-
-    let static_dir = std::path::PathBuf::from("./src-web/static");
-    println!("Static dir exists: {}", static_dir.exists());
 
     let server: lobby::Lobby = Default::default();
     let server = server.start();
     HttpServer::new(move|| {
+
+        let static_dir = std::path::PathBuf::from("./src-web/static");
+        println!("Static dir exists: {}", static_dir.exists());
+
+
         wapp!(
             App::new()
             .wrap(
@@ -63,7 +65,7 @@ async fn main() -> std::io::Result<()> {
                 .handler(actix_web::http::StatusCode::NOT_FOUND, not_found)
             )
             .app_data(web::Data::new(server.clone()))
-            .service(actix_files::Files::new("/src-web/static", &static_dir));
+            .service(actix_files::Files::new("/src-web/static", static_dir));
             
             homepage, join,
             host, play,
